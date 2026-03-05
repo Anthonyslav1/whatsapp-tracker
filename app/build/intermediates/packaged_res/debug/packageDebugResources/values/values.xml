@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">Tracks which WhatsApp chat you are viewing and for how long. All data stays on your device. No chat content is logged.</string>
+    <string name="app_name">WhatsApp Tracker</string>
+</resources>
