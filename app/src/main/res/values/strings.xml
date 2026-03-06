@@ -2,4 +2,48 @@
 <resources>
     <string name="app_name">Ravdesk</string>
     <string name="accessibility_service_description">Tracks which WhatsApp chat you are viewing and for how long. All data stays on your device. No chat content is logged.</string>
+    
+    <!-- Yearly Report Strings -->
+    <string name="screenshot_hint">Screenshot to share 📸</string>
+    <string name="not_enough_data">Not enough data yet</string>
+    <string name="keep_chatting">Keep chatting! Your year-end report will appear here.</string>
+    <string name="go_back">Go Back</string>
+    
+    <string name="intro_emoji">✨</string>
+    <string name="intro_title">Your Year in\nWhatsApp</string>
+    <string name="intro_swipe">Swipe to explore →</string>
+    
+    <string name="total_time_title">You spent</string>
+    <string name="total_time_hours">hours</string>
+    <string name="total_time_subtitle">on WhatsApp this year</string>
+    <string name="total_time_movies">That\'s like watching %s movies 🎬</string>
+    
+    <string name="best_friend_title">Your #1</string>
+    <string name="best_friend_subtitle">Best Friend</string>
+    <string name="best_friend_emoji">👑</string>
+    <string name="best_friend_time">%1$dh %2$dm together</string>
+    <string name="best_friend_pct">That\'s %s%% of your WhatsApp time</string>
+    <string name="no_chats">No chats tracked yet</string>
+    
+    <string name="top_five_title">Your Top 5</string>
+    <string name="top_five_time">%1$dh %2$dm</string>
+    <string name="top_five_empty">Start chatting to see your rankings!</string>
+    
+    <string name="most_active_month_title">Most Active Month</string>
+    <string name="most_active_month_time">%s hours of chatting</string>
+    
+    <string name="fun_facts_title">Fun Facts</string>
+    <string name="fun_facts_contacts">You chatted with %s different people</string>
+    <string name="fun_facts_longest">Longest chat: %1$dh %2$dm\nwith %3$s</string>
+    <string name="fun_facts_active_day">You\'re most active on %ss</string>
+    <string name="fun_facts_sessions">%s chat sessions this year</string>
+    
+    <string name="entertainer_title">The Entertainer</string>
+    <string name="entertainer_emoji">🍿</string>
+    <string name="entertainer_watched">You watched</string>
+    <string name="entertainer_status_most">\'s Status the most!</string>
+    <string name="entertainer_duration_h_m">%1$dh %2$dm watched</string>
+    <string name="entertainer_duration_m_s">%1$dm %2$ds watched</string>
+    <string name="entertainer_duration_s">%1$ds watched</string>
+    <string name="entertainer_empty">No statuses watched</string>
 </resources>

@@ -6,6 +6,8 @@ import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.utils.TimeUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.time.*
 
 data class YearlyReportData(
@@ -54,43 +56,42 @@ class UsageRepository(private val dao: ChatSessionDao) {
         }
     }
 
-    suspend fun getYearlyReport(year: Int): YearlyReportData {
+    suspend fun getYearlyReport(year: Int): YearlyReportData = coroutineScope {
         val startOfYear = TimeUtils.getStartOfDayEpochMilli(LocalDate.of(year, 1, 1))
         val endOfYear = TimeUtils.getStartOfDayEpochMilli(LocalDate.of(year + 1, 1, 1))
 
-        // Offload heavy aggregation to SQLite instead of in-memory groupBy
-        val monthlyList = dao.getMonthlyDurations(startOfYear, endOfYear)
+        // Parallelize Database Aggregations
+        val monthlyListDeferred = async { dao.getMonthlyDurations(startOfYear, endOfYear) }
+        val topContactsDeferred = async { dao.getTopContactsYearly(startOfYear, endOfYear, 100) }
+        val uniqueContactCountDeferred = async { dao.getUniqueContactCount(startOfYear, endOfYear) }
+        val totalSessionCountDeferred = async { dao.getTotalSessionCount(startOfYear, endOfYear) }
+        val longestSessionDeferred = async { dao.getLongestSession(startOfYear, endOfYear) }
+        val dowResultDeferred = async { dao.getMostActiveDayOfWeek(startOfYear, endOfYear) }
+        val topEntertainerDeferred = async { dao.getTopEntertainerYearly(startOfYear, endOfYear) }
+        
+        val monthlyList = monthlyListDeferred.await()
         val totalDuration = monthlyList.sumOf { it.totalDuration }
 
         val monthlyDurations = monthlyList.map { 
             Month.of(it.month) to it.totalDuration 
         }
 
-        val topContacts = dao.getTopContactsYearly(startOfYear, endOfYear, 100)
-        val uniqueContactCount = dao.getUniqueContactCount(startOfYear, endOfYear)
-        val totalSessionCount = dao.getTotalSessionCount(startOfYear, endOfYear)
-        val longestSession = dao.getLongestSession(startOfYear, endOfYear)
-
-        val dowResult = dao.getMostActiveDayOfWeek(startOfYear, endOfYear)
+        val dowResult = dowResultDeferred.await()
         val mostActiveDayOfWeek = dowResult?.let { 
-            // SQLite %w returns 0=Sunday, 1=Monday... 6=Saturday
-            // java.time.DayOfWeek uses 1=Monday... 7=Sunday
             val mappedDay = if (it.dayOfWeek == 0) 7 else it.dayOfWeek
             DayOfWeek.of(mappedDay)
         }
 
-        val topEntertainer = dao.getTopEntertainerYearly(startOfYear, endOfYear)
-
-        return YearlyReportData(
+        return@coroutineScope YearlyReportData(
             year = year,
             totalDurationMs = totalDuration,
-            topContacts = topContacts,
+            topContacts = topContactsDeferred.await(),
             monthlyDurations = monthlyDurations,
-            longestSession = longestSession,
-            uniqueContactCount = uniqueContactCount,
-            totalSessionCount = totalSessionCount,
+            longestSession = longestSessionDeferred.await(),
+            uniqueContactCount = uniqueContactCountDeferred.await(),
+            totalSessionCount = totalSessionCountDeferred.await(),
             mostActiveDayOfWeek = mostActiveDayOfWeek,
-            topEntertainer = topEntertainer
+            topEntertainer = topEntertainerDeferred.await()
         )
     }
 }

@@ -38,6 +38,7 @@ class WhatsAppAccessibilityParserTest {
         
         every { titleNode.className } returns "android.widget.TextView"
         every { titleNode.text } returns "John Doe"
+        every { titleNode.viewIdResourceName } returns "com.whatsapp:id/conversation_contact_name_title"
         every { titleNode.childCount } returns 0
 
         val result = parser.extractChatName(rootNode)
@@ -57,10 +58,67 @@ class WhatsAppAccessibilityParserTest {
         every { toolbarNode.getChild(0) } returns uiTextNode
         
         every { uiTextNode.className } returns "android.widget.TextView"
-        every { uiTextNode.text } returns "Typing..." // System string
+        every { uiTextNode.text } returns "Typing..." // System string matched by Regex
+        every { uiTextNode.viewIdResourceName } returns "com.whatsapp:id/conversation_contact_status"
         every { uiTextNode.childCount } returns 0
 
         val result = parser.extractChatName(rootNode)
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractStatusNameWithDeepTree() {
+        // Create a deep tree (depth 5) to test BFS performance and correctness.
+        val rootNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+        var currentNode = rootNode
+        
+        for (i in 1..4) {
+            val childNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+            every { currentNode.childCount } returns 2
+            
+            // Add a decoy text node that should NOT be picked up (e.g., system UI text)
+            val decoyNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+            every { decoyNode.className } returns "android.widget.TextView"
+            every { decoyNode.text } returns "2 mutual friends" // Meaningful text, but...
+            // Wait, "2 mutual friends" WOULD be picked up if it's the first text found on a status screen!
+            // Actually, we want to test status. Status screens have timestamps like "10:45 AM"
+            every { decoyNode.text } returns "10:45" // Timestamps are ignored by isSystemUIText
+            every { decoyNode.childCount } returns 0
+            
+            every { currentNode.getChild(0) } returns decoyNode
+            every { currentNode.getChild(1) } returns childNode
+            
+            currentNode = childNode
+        }
+        
+        // At depth 5, put the actual status creator's name
+        val targetNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+        every { targetNode.className } returns "android.widget.TextView"
+        every { targetNode.text } returns "Alice Wonderland"
+        every { targetNode.childCount } returns 0
+        every { targetNode.viewIdResourceName } returns "com.whatsapp:id/contact_name"
+        
+        every { currentNode.childCount } returns 1
+        every { currentNode.getChild(0) } returns targetNode
+        
+        val result = parser.extractStatusName(rootNode)
+        assertEquals("Alice Wonderland", result)
+    }
+
+    @Test
+    fun testExtractStatusNameReturnsNullForOnlySystemUI() {
+        val rootNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+        val targetNode = mockk<AccessibilityNodeInfo>(relaxed = true)
+        
+        every { targetNode.className } returns "android.widget.TextView"
+        every { targetNode.text } returns "Click here" // Ignored by isSystemUIText
+        every { targetNode.childCount } returns 0
+        every { targetNode.viewIdResourceName } returns "com.whatsapp:id/status_text"
+        
+        every { rootNode.childCount } returns 1
+        every { rootNode.getChild(0) } returns targetNode
+        
+        val result = parser.extractStatusName(rootNode)
         assertNull(result)
     }
 }

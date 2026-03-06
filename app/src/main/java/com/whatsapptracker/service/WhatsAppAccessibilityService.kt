@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -22,6 +23,7 @@ class WhatsAppAccessibilityService : AccessibilityService() {
     lateinit var sessionTracker: SessionTrackerManager
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var debounceJob: Job? = null
 
     override fun onServiceConnected() {
         serviceInfo = AccessibilityServiceInfo().apply {
@@ -51,38 +53,36 @@ class WhatsAppAccessibilityService : AccessibilityService() {
     }
 
     private fun handleWhatsAppScreen(className: String) {
-        when {
-            // Chat conversation detected
-            className.contains("Conversation", ignoreCase = true) ||
-            className.contains("ConversationActivity", ignoreCase = true) -> {
-                serviceScope.launch {
-                    delay(150)
+        debounceJob?.cancel()
+        debounceJob = serviceScope.launch {
+            delay(500) // Debounce rapid scroll/animation events
+            when {
+                // Chat conversation detected
+                className.contains("Conversation", ignoreCase = true) ||
+                className.contains("ConversationActivity", ignoreCase = true) -> {
                     val title = parser.extractChatName(rootInActiveWindow)
                     if (title != null && title != sessionTracker.currentChatName) {
                         sessionTracker.endSession()
                         sessionTracker.startSession(title, "CHAT")
                     }
                 }
-            }
-            // Status viewing detected
-            className.contains("StatusPlaybackActivity", ignoreCase = true) ||
-            className.contains("StatusViewer", ignoreCase = true) -> {
-                serviceScope.launch {
-                    delay(150)
+                // Status viewing detected
+                className.contains("StatusPlaybackActivity", ignoreCase = true) ||
+                className.contains("StatusViewer", ignoreCase = true) -> {
                     val title = parser.extractStatusName(rootInActiveWindow)
                     if (title != null && title != sessionTracker.currentChatName) {
                         sessionTracker.endSession()
                         sessionTracker.startSession(title, "STATUS")
                     }
                 }
-            }
-            // Home screen or other WhatsApp screens
-            className.contains("HomeActivity", ignoreCase = true) ||
-            className.contains("Main", ignoreCase = true) ||
-            className.contains("Settings", ignoreCase = true) ||
-            className.contains("Profile", ignoreCase = true) ||
-            className.contains("About", ignoreCase = true) -> {
-                sessionTracker.endSession()
+                // Home screen or other WhatsApp screens
+                className.contains("HomeActivity", ignoreCase = true) ||
+                className.contains("Main", ignoreCase = true) ||
+                className.contains("Settings", ignoreCase = true) ||
+                className.contains("Profile", ignoreCase = true) ||
+                className.contains("About", ignoreCase = true) -> {
+                    sessionTracker.endSession()
+                }
             }
         }
     }

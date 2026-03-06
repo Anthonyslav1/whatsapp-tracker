@@ -8,10 +8,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.Data
 
 @Singleton
 class SessionTrackerManager @Inject constructor(
-    private val dao: ChatSessionDao
+    private val dao: ChatSessionDao,
+    private val workManager: WorkManager
 ) {
     // Isolated scope for DB writes so they aren't cancelled if the Service is abruptly destroyed.
     private val trackerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -41,12 +45,17 @@ class SessionTrackerManager @Inject constructor(
         val duration = endTime - sessionStartTime
 
         if (duration > 2000) {
-            trackerScope.launch {
-                val session = dao.getById(sessionId)
-                if (session != null) {
-                    dao.update(session.copy(endTime = endTime, durationMs = duration))
-                }
-            }
+            val inputData = Data.Builder()
+                .putLong(SessionSaveWorker.KEY_SESSION_ID, sessionId)
+                .putLong(SessionSaveWorker.KEY_END_TIME, endTime)
+                .putLong(SessionSaveWorker.KEY_DURATION, duration)
+                .build()
+
+            val saveWork = OneTimeWorkRequestBuilder<SessionSaveWorker>()
+                .setInputData(inputData)
+                .build()
+
+            workManager.enqueue(saveWork)
         } else {
             trackerScope.launch {
                 val session = dao.getById(sessionId)
