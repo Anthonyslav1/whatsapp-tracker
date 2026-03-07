@@ -46,4 +46,27 @@
     <string name="entertainer_duration_m_s">%1$dm %2$ds watched</string>
     <string name="entertainer_duration_s">%1$ds watched</string>
     <string name="entertainer_empty">No statuses watched</string>
+
+    <!-- Dashboard Strings -->
+    <string name="dashboard_title">Ravdesk</string>
+    <string name="dashboard_subtitle">Today\'s activity</string>
+    <string name="screen_time">Screen Time</string>
+    <string name="on_whatsapp_today">on WhatsApp today</string>
+    <string name="your_year_wrapped">Your Year Wrapped</string>
+    <string name="wrapped_subtitle">Find your #1 best friend →</string>
+    <string name="top_contacts_today">Top Contacts Today</string>
+    <string name="top_contacts_empty">Start chatting on WhatsApp to see your top contacts here</string>
+    <string name="top_entertainers_today">Top Entertainers Today</string>
+    <string name="top_entertainers_empty">View WhatsApp statuses to see who entertains you most</string>
+    <string name="last_7_days">Last 7 Days</string>
+    <string name="settings">Settings</string>
+
+    <!-- Setup Strings -->
+    <string name="setup_tagline">Track your WhatsApp screen time</string>
+    <string name="setup_service_active">Accessibility Service Active ✓</string>
+    <string name="setup_enable_service">Enable Accessibility Service</string>
+    <string name="setup_description">This lets the app detect which WhatsApp chat you\'re viewing. No chat content is read or stored.</string>
+    <string name="setup_open_settings">Open Settings</string>
+    <string name="setup_path">Settings → Accessibility → Ravdesk → Enable</string>
+    <string name="setup_privacy">🔒 All data stays on your device</string>
 </resources>

@@ -20,10 +20,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.whatsapptracker.R
 import com.whatsapptracker.checkAccessibilityEnabled
 import com.whatsapptracker.ui.theme.*
 
@@ -87,7 +89,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "WhatsApp\nTracker",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayMedium,
                 color = TextPrimary,
                 textAlign = TextAlign.Center,
@@ -97,7 +99,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Find your best friend",
+                text = stringResource(R.string.setup_tagline),
                 style = MaterialTheme.typography.titleLarge,
                 color = WhatsAppGreen,
                 textAlign = TextAlign.Center,
@@ -125,8 +127,8 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = if (isEnabled) "Accessibility Service Active ✓"
-                        else "Enable Accessibility Service",
+                        text = if (isEnabled) stringResource(R.string.setup_service_active)
+                        else stringResource(R.string.setup_enable_service),
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = FontWeight.SemiBold,
@@ -135,7 +137,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "This lets the app detect which WhatsApp chat you're viewing. No chat content is read or stored.",
+                        text = stringResource(R.string.setup_description),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
@@ -155,7 +157,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
                             )
                         ) {
                             Text(
-                                text = "Open Settings",
+                                text = stringResource(R.string.setup_open_settings),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
@@ -165,7 +167,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Settings → Accessibility → WhatsApp Tracker → Enable",
+                            text = stringResource(R.string.setup_path),
                             style = MaterialTheme.typography.labelSmall,
                             color = TextMuted,
                             textAlign = TextAlign.Center,
@@ -178,7 +180,7 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
 
             // Privacy note
             Text(
-                text = "🔒 All data stays on your device",
+                text = stringResource(R.string.setup_privacy),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMuted,
             )

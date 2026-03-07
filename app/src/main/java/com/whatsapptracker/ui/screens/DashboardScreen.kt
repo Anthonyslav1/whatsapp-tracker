@@ -3,6 +3,7 @@ package com.whatsapptracker.ui.screens
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.whatsapptracker.R
 import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.DashboardViewModel
@@ -49,23 +52,24 @@ fun DashboardScreen(
             .systemBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
+        // Header — rebranded to Ravdesk
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
-                    text = "WhatsApp Tracker",
+                    text = stringResource(R.string.dashboard_title),
                     style = MaterialTheme.typography.headlineLarge,
                     color = TextPrimary,
                     fontWeight = FontWeight.Black,
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Today's activity",
+                    text = stringResource(R.string.dashboard_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                 )
@@ -73,47 +77,50 @@ fun DashboardScreen(
             IconButton(onClick = onNavigateToSetup) {
                 Icon(
                     Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(R.string.settings),
                     tint = TextSecondary,
                 )
             }
         }
 
-        // Today's total time card
+        // Today's total time card — more padding for breathing room
         TodayTimeCard(todayDuration)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         // Wrapped CTA
         WrappedBanner(onClick = onNavigateToWrapped)
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         // Top contacts
-        SectionHeader("Top Contacts Today")
+        SectionHeader(stringResource(R.string.top_contacts_today))
+        Spacer(modifier = Modifier.height(4.dp))
         if (topContacts.isEmpty()) {
-            EmptyState("Start chatting on WhatsApp to see your top contacts here")
+            EmptyState(stringResource(R.string.top_contacts_empty))
         } else {
             TopContactsList(topContacts)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        // Top Entertainers
-        SectionHeader("Top Entertainers Today 🍿")
+        // Top Entertainers — visually differentiated with purple accent + horizontal pills
+        SectionHeader(stringResource(R.string.top_entertainers_today), emoji = "🍿")
+        Spacer(modifier = Modifier.height(4.dp))
         if (topEntertainers.isEmpty()) {
-            EmptyState("View WhatsApp statuses to see whose statuses you watch the most")
+            EmptyState(stringResource(R.string.top_entertainers_empty))
         } else {
-            TopContactsList(topEntertainers)
+            EntertainersPillRow(topEntertainers)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         // Weekly chart
-        SectionHeader("Last 7 Days")
+        SectionHeader(stringResource(R.string.last_7_days))
+        Spacer(modifier = Modifier.height(4.dp))
         WeeklyChart(weeklyTotals)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
@@ -122,7 +129,7 @@ private fun TodayTimeCard(durationMs: Long) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
     ) {
@@ -134,15 +141,15 @@ private fun TodayTimeCard(durationMs: Long) {
                         colors = listOf(WhatsAppTeal, WhatsAppDarkGreen, WhatsAppGreen)
                     )
                 )
-                .padding(28.dp),
+                .padding(horizontal = 28.dp, vertical = 36.dp),
         ) {
             Column {
                 Text(
-                    text = "Screen Time",
+                    text = stringResource(R.string.screen_time),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White.copy(alpha = 0.8f),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = formatDuration(durationMs),
                     style = MaterialTheme.typography.displayLarge,
@@ -151,7 +158,7 @@ private fun TodayTimeCard(durationMs: Long) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "on WhatsApp today",
+                    text = stringResource(R.string.on_whatsapp_today),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White.copy(alpha = 0.7f),
                 )
@@ -165,7 +172,7 @@ private fun WrappedBanner(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 24.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -193,13 +200,13 @@ private fun WrappedBanner(onClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Your Year Wrapped",
+                        text = stringResource(R.string.your_year_wrapped),
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "Find your #1 best friend →",
+                        text = stringResource(R.string.wrapped_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.8f),
                     )
@@ -210,14 +217,22 @@ private fun WrappedBanner(onClick: () -> Unit) {
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        color = TextPrimary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-    )
+private fun SectionHeader(title: String, emoji: String? = null) {
+    Row(
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold,
+        )
+        if (emoji != null) {
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = emoji, fontSize = 18.sp)
+        }
+    }
 }
 
 @Composable
@@ -225,7 +240,7 @@ private fun EmptyState(message: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
     ) {
@@ -242,11 +257,11 @@ private fun EmptyState(message: String) {
 private fun TopContactsList(contacts: List<ContactDuration>) {
     val maxDuration = contacts.maxOfOrNull { it.totalDuration }?.toFloat() ?: 1f
 
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         contacts.forEachIndexed { index, contact ->
             ContactRow(index + 1, contact, maxDuration)
             if (index < contacts.lastIndex) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -319,6 +334,66 @@ private fun ContactRow(rank: Int, contact: ContactDuration, maxDuration: Float) 
     }
 }
 
+/**
+ * Visually differentiated Entertainer section:
+ * Horizontal scrolling pill cards with purple accent instead of vertical bars.
+ */
+@Composable
+private fun EntertainersPillRow(entertainers: List<ContactDuration>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        entertainers.forEachIndexed { index, entertainer ->
+            val hours = entertainer.totalDuration / 3600000
+            val minutes = (entertainer.totalDuration % 3600000) / 60000
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = if (index == 0)
+                                    listOf(WrappedPurple2, PrimaryPurple)
+                                else
+                                    listOf(DarkSurfaceVariant, DarkSurfaceVariant)
+                            )
+                        )
+                        .padding(16.dp),
+                ) {
+                    Column {
+                        Text(
+                            text = "🍿",
+                            fontSize = 24.sp,
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = entertainer.contactName,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = formatDuration(entertainer.totalDuration),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (index == 0) Color.White.copy(alpha = 0.8f) else TextSecondary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun WeeklyChart(dailyTotals: Map<LocalDate, Long>) {
     val today = LocalDate.now()
@@ -329,7 +404,7 @@ private fun WeeklyChart(dailyTotals: Map<LocalDate, Long>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
     ) {
