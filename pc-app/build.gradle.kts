@@ -28,8 +28,8 @@ compose.desktop {
         mainClass = "com.whatsapptracker.pc.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "WhatsAppTrackerPC"
-            packageVersion = "1.0.0"
+            packageName = "Ravdesk"
+            packageVersion = "2.0.0"
         }
     }
 }

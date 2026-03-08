@@ -21,6 +21,9 @@ class TrackerService {
     var sessionTotalSeconds: Long = 0
         private set
 
+    var isCurrentlyTracking: Boolean = false
+        private set
+
     fun startTracking() {
         scope.launch {
             while (isActive) {
@@ -29,10 +32,12 @@ class TrackerService {
                 if (isForegroundNow && !isTrackingForeground) {
                     // Just gained focus
                     isTrackingForeground = true
+                    isCurrentlyTracking = true
                     currentSessionStart = System.currentTimeMillis()
                 } else if (!isForegroundNow && isTrackingForeground) {
                     // Just lost focus
                     isTrackingForeground = false
+                    isCurrentlyTracking = false
                     val sessionEnd = System.currentTimeMillis()
                     val durationSeconds = (sessionEnd - currentSessionStart) / 1000
                     
