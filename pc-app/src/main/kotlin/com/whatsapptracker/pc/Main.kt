@@ -25,7 +25,9 @@ import com.whatsapptracker.pc.db.Database
 import com.whatsapptracker.pc.db.UsageEvent
 import com.whatsapptracker.pc.db.UsageEventRepository
 import com.whatsapptracker.pc.tracker.TrackerService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -58,39 +60,56 @@ private val RavdeskDarkColors = darkColorScheme(
 )
 
 fun main() = application {
-    // Initialization
+    // Shared repository — single instance used by both service and UI
+    val repository = remember { UsageEventRepository() }
+
     val trackerService = remember {
         Database.initialize()
-        val service = TrackerService()
+        val service = TrackerService(repository)
         service.startTracking()
         service
     }
 
-    val repository = remember { UsageEventRepository() }
-
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            // Graceful shutdown: flush active session + close DB
+            trackerService.stop()
+            Database.close()
+            exitApplication()
+        },
         title = "Ravdesk",
         state = WindowState(size = DpSize(420.dp, 720.dp)),
     ) {
         MaterialTheme(colorScheme = RavdeskDarkColors) {
-            var todaySessions by remember { mutableStateOf(repository.getTodaySessions()) }
-            var todayTotalSeconds by remember { mutableStateOf(repository.getTodayTotalSeconds()) }
-            var weeklyTotals by remember { mutableStateOf(repository.getWeeklyTotals()) }
-            var liveSeconds by remember { mutableStateOf(trackerService.sessionTotalSeconds) }
-            var isActive by remember { mutableStateOf(trackerService.isCurrentlyTracking) }
-            var sessionCount by remember { mutableStateOf(repository.getTodaySessionCount()) }
+            // Live data (polled every 1s — cheap, no DB)
+            var liveSeconds by remember { mutableStateOf(0L) }
+            var isActive by remember { mutableStateOf(false) }
 
-            // Polling for UI updates
+            // DB data (polled every 5s on IO thread)
+            var todaySessions by remember { mutableStateOf(emptyList<UsageEvent>()) }
+            var todayTotalSeconds by remember { mutableStateOf(0L) }
+            var weeklyTotals by remember { mutableStateOf(emptyMap<LocalDate, Long>()) }
+            var sessionCount by remember { mutableStateOf(0) }
+
+            // Fast poll: live counter (1s, no DB hit)
             LaunchedEffect(Unit) {
                 while (true) {
-                    liveSeconds = trackerService.sessionTotalSeconds
+                    liveSeconds = trackerService.getLiveSessionSeconds()
                     isActive = trackerService.isCurrentlyTracking
-                    todaySessions = repository.getTodaySessions()
-                    todayTotalSeconds = repository.getTodayTotalSeconds()
-                    weeklyTotals = repository.getWeeklyTotals()
-                    sessionCount = repository.getTodaySessionCount()
                     delay(1000)
+                }
+            }
+
+            // Slow poll: DB queries (5s, on IO dispatcher)
+            LaunchedEffect(Unit) {
+                while (true) {
+                    withContext(Dispatchers.IO) {
+                        todaySessions = repository.getTodaySessions()
+                        todayTotalSeconds = repository.getTodayTotalSeconds()
+                        weeklyTotals = repository.getWeeklyTotals()
+                        sessionCount = repository.getTodaySessionCount()
+                    }
+                    delay(5000)
                 }
             }
 
@@ -277,7 +296,6 @@ fun LiveSessionCard(isActive: Boolean, seconds: Long) {
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Pulsing dot
             Box(
                 modifier = Modifier
                     .size(10.dp)
@@ -439,7 +457,6 @@ fun SessionRow(event: UsageEvent) {
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Time range
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "$startTime – $endTime",
@@ -448,7 +465,6 @@ fun SessionRow(event: UsageEvent) {
                     fontWeight = FontWeight.Medium,
                 )
             }
-            // Duration badge
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
