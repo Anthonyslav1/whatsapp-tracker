@@ -27,20 +27,53 @@ object Database {
     fun initialize() {
         val conn = getConnection()
         val statement = conn.createStatement()
+
+        // Create the new v2 schema with daily upsert logic
         statement.execute("""
-            CREATE TABLE IF NOT EXISTS usage_events (
+            CREATE TABLE IF NOT EXISTS usage_events_v2 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp_start INTEGER NOT NULL,
-                timestamp_end INTEGER NOT NULL,
-                duration_seconds INTEGER NOT NULL
+                date_ms INTEGER NOT NULL,
+                chat_name TEXT,
+                duration_seconds INTEGER NOT NULL,
+                UNIQUE(date_ms, chat_name)
             )
         """.trimIndent())
 
         // Index for time-range queries (today, weekly)
         statement.execute("""
-            CREATE INDEX IF NOT EXISTS idx_usage_ts
-            ON usage_events(timestamp_start)
+            CREATE INDEX IF NOT EXISTS idx_usage_v2_date 
+            ON usage_events_v2(date_ms)
         """.trimIndent())
+
+        // Migrate legacy v1 data if v2 is empty
+        migrateLegacyData(conn)
+    }
+
+    private fun migrateLegacyData(conn: Connection) {
+        val statement = conn.createStatement()
+        
+        // Check if v2 is empty
+        val rs = statement.executeQuery("SELECT COUNT(*) FROM usage_events_v2")
+        val v2Count = if (rs.next()) rs.getInt(1) else 0
+
+        if (v2Count == 0) {
+            try {
+                // Check if v1 table actually exists
+                statement.executeQuery("SELECT 1 FROM usage_events LIMIT 1")
+                
+                // If it exists, migrate it over. We take the timestamp_start, 
+                // truncate to the start of that day (using SQLite date modifiers),
+                // but for simplicity since JVM and SQLite timezones can differ, 
+                // we'll just insert the exact ms and label the chat as 'Legacy Session'.
+                statement.execute("""
+                    INSERT INTO usage_events_v2 (date_ms, chat_name, duration_seconds)
+                    SELECT timestamp_start, 'Legacy Session', duration_seconds
+                    FROM usage_events
+                """.trimIndent())
+            } catch (e: Exception) {
+                // Legacy table does not exist, nothing to migrate
+            }
+        }
     }
 
     /**

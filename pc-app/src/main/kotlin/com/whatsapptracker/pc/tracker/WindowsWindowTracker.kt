@@ -39,4 +39,30 @@ class WindowsWindowTracker {
         val title = getActiveWindowTitle()
         return title.contains("WhatsApp", ignoreCase = true)
     }
+
+    /**
+     * Extracts the specific chat name from the window title if available.
+     * Returns null if WhatsApp is not foregrounded or no specific chat is open.
+     */
+    fun getActiveChatName(): String? {
+        if (!isWhatsAppForeground()) return null
+
+        var title = getActiveWindowTitle()
+        
+        // WhatsApp window titles format:
+        // "Alice - WhatsApp"
+        // "(2) Bob - WhatsApp"
+        // "WhatsApp" (main menu)
+        
+        if (title == "WhatsApp") return null
+
+        // Remove the standard suffix
+        title = title.removeSuffix(" - WhatsApp").trim()
+
+        // Strip notification badge like "(2) "
+        val badgeRegex = Regex("^\\(\\d+\\)\\s*")
+        title = title.replace(badgeRegex, "").trim()
+
+        return if (title.isEmpty()) null else title
+    }
 }

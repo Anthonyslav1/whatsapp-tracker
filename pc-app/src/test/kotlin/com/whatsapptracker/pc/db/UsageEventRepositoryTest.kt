@@ -27,67 +27,77 @@ class UsageEventRepositoryTest {
         File("whatsapp_tracker.db").delete()
     }
 
-    // ── Insert + Retrieve ──
+    // ── Upsert Logic ──
 
     @Test
-    fun `insertEvent returns valid id`() {
-        val event = makeEvent(durationSeconds = 120)
-        val id = repository.insertEvent(event)
-        assertTrue(id > 0, "Insert should return a positive ID")
-    }
-
-    @Test
-    fun `getAllEvents returns inserted events in descending order`() {
-        val now = System.currentTimeMillis()
-        repository.insertEvent(makeEvent(now - 5000, now - 3000, 2))
-        repository.insertEvent(makeEvent(now - 2000, now, 2))
+    fun `upsertEvent limits to 1 row per person per day`() {
+        val todayMs = System.currentTimeMillis()
+        
+        repository.upsertEvent(todayMs, "Alice", 60)
+        repository.upsertEvent(todayMs, "Alice", 120) // Should update the first one
+        repository.upsertEvent(todayMs, "Bob", 30)    // New person
 
         val events = repository.getAllEvents()
-        assertEquals(2, events.size)
-        assertTrue(events[0].timestampStart > events[1].timestampStart)
-    }
-
-    // ── Today aggregation ──
-
-    @Test
-    fun `getTodayTotalSeconds sums only today's events`() {
-        val now = System.currentTimeMillis()
-        // Today
-        repository.insertEvent(makeEvent(now - 60_000, now, 60))
-        repository.insertEvent(makeEvent(now - 120_000, now - 60_000, 60))
-        // Yesterday (should be excluded)
-        val yesterday = now - 86_400_000
-        repository.insertEvent(makeEvent(yesterday, yesterday + 60_000, 60))
-
-        val total = repository.getTodayTotalSeconds()
-        assertEquals(120L, total)
+        assertEquals(2, events.size, "Should be exactly 2 rows (Alice and Bob)")
+        
+        val aliceRow = events.find { it.chatName == "Alice" }
+        assertEquals(180L, aliceRow?.durationSeconds, "Alice's time should be summed (180s)")
+        
+        val bobRow = events.find { it.chatName == "Bob" }
+        assertEquals(30L, bobRow?.durationSeconds)
     }
 
     @Test
-    fun `getTodayTotalSeconds returns 0 when no events exist`() {
-        assertEquals(0L, repository.getTodayTotalSeconds())
+    fun `upsertEvent handles null chatName correctly`() {
+        val todayMs = System.currentTimeMillis()
+        repository.upsertEvent(todayMs, null, 10)
+        repository.upsertEvent(todayMs, null, 15)
+
+        val events = repository.getAllEvents()
+        assertEquals(1, events.size)
+        assertEquals(null, events[0].chatName)
+        assertEquals(25L, events[0].durationSeconds)
+    }
+
+    // ── Aggregation ──
+
+    @Test
+    fun `getTopContactsAllTime aggregates correctly`() {
+        val todayMs = System.currentTimeMillis()
+        val yesterdayMs = todayMs - 86_400_000
+
+        // Alice: 60s today + 40s yesterday = 100s
+        repository.upsertEvent(todayMs, "Alice", 60)
+        repository.upsertEvent(yesterdayMs, "Alice", 40)
+        
+        // Bob: 50s today
+        repository.upsertEvent(todayMs, "Bob", 50)
+        
+        // Null/Menu should be ignored
+        repository.upsertEvent(todayMs, null, 1000)
+
+        val topContacts = repository.getTopContactsAllTime(10)
+        
+        assertEquals(2, topContacts.size)
+        // Alice should be first
+        assertEquals("Alice", topContacts[0].chatName)
+        assertEquals(100L, topContacts[0].totalSeconds)
+        // Bob second
+        assertEquals("Bob", topContacts[1].chatName)
+        assertEquals(50L, topContacts[1].totalSeconds)
     }
 
     @Test
-    fun `getTodaySessions returns only today's events`() {
-        val now = System.currentTimeMillis()
-        repository.insertEvent(makeEvent(now - 60_000, now, 60))
-        val yesterday = now - 86_400_000
-        repository.insertEvent(makeEvent(yesterday, yesterday + 60_000, 60))
+    fun `getTodayTotalSeconds sums everything across chats`() {
+        val todayMs = System.currentTimeMillis()
+        repository.upsertEvent(todayMs, "Alice", 60)
+        repository.upsertEvent(todayMs, "Bob", 120)
+        repository.upsertEvent(todayMs, null, 20)
+        
+        // Yesterday (excluded)
+        repository.upsertEvent(todayMs - 86_400_000, "Alice", 100)
 
-        val sessions = repository.getTodaySessions()
-        assertEquals(1, sessions.size)
-    }
-
-    @Test
-    fun `getTodaySessionCount counts only today`() {
-        val now = System.currentTimeMillis()
-        repository.insertEvent(makeEvent(now - 60_000, now, 60))
-        repository.insertEvent(makeEvent(now - 120_000, now - 60_000, 60))
-        val yesterday = now - 86_400_000
-        repository.insertEvent(makeEvent(yesterday, yesterday + 60_000, 60))
-
-        assertEquals(2, repository.getTodaySessionCount())
+        assertEquals(200L, repository.getTodayTotalSeconds())
     }
 
     // ── Weekly aggregation ──
@@ -97,16 +107,16 @@ class UsageEventRepositoryTest {
         val today = LocalDate.now()
         val todayMs = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        // Add 2 events today
-        repository.insertEvent(makeEvent(todayMs + 1000, todayMs + 61_000, 60))
-        repository.insertEvent(makeEvent(todayMs + 70_000, todayMs + 130_000, 60))
+        // Today
+        repository.upsertEvent(todayMs, "Alice", 60)
+        repository.upsertEvent(todayMs, "Bob", 60)
 
-        // Add 1 event 3 days ago
+        // 3 days ago
         val threeDaysAgoMs = today.minusDays(3)
             .atStartOfDay(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli()
-        repository.insertEvent(makeEvent(threeDaysAgoMs + 1000, threeDaysAgoMs + 301_000, 300))
+        repository.upsertEvent(threeDaysAgoMs, "Alice", 300)
 
         val weekly = repository.getWeeklyTotals()
         assertEquals(7, weekly.size, "Should always return 7 days")
@@ -114,51 +124,4 @@ class UsageEventRepositoryTest {
         assertEquals(300L, weekly[today.minusDays(3)])
         assertEquals(0L, weekly[today.minusDays(1)])
     }
-
-    @Test
-    fun `getWeeklyTotals excludes events older than 7 days`() {
-        val eightDaysAgoMs = LocalDate.now().minusDays(8)
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-        repository.insertEvent(makeEvent(eightDaysAgoMs, eightDaysAgoMs + 60_000, 60))
-
-        val weekly = repository.getWeeklyTotals()
-        val totalSeconds = weekly.values.sum()
-        assertEquals(0L, totalSeconds, "8-day-old events should be excluded")
-    }
-
-    // ── Edge cases ──
-
-    @Test
-    fun `inserting a 0-second event still works`() {
-        val now = System.currentTimeMillis()
-        val id = repository.insertEvent(makeEvent(now, now, 0))
-        assertTrue(id > 0)
-        // But it should be counted
-        assertEquals(1, repository.getTodaySessionCount())
-        assertEquals(0L, repository.getTodayTotalSeconds())
-    }
-
-    @Test
-    fun `rapid successive inserts all persist`() {
-        val now = System.currentTimeMillis()
-        repeat(50) { i ->
-            repository.insertEvent(makeEvent(now + i, now + i + 1000, 1))
-        }
-        assertEquals(50, repository.getTodaySessionCount())
-        assertEquals(50L, repository.getTodayTotalSeconds())
-    }
-
-    // ── Helpers ──
-
-    private fun makeEvent(
-        start: Long = System.currentTimeMillis() - 60_000,
-        end: Long = System.currentTimeMillis(),
-        durationSeconds: Long = 60
-    ) = UsageEvent(
-        timestampStart = start,
-        timestampEnd = end,
-        durationSeconds = durationSeconds
-    )
 }

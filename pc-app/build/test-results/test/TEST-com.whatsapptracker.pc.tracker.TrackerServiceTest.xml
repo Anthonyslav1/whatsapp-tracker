@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.whatsapptracker.pc.tracker.TrackerServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-03-08T16:45:31.558Z" hostname="ANTHONY--THESTA" time="0.063">
+  <properties/>
+  <testcase name="stop flushes active session state" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.05"/>
+  <testcase name="repository correctly counts sessions after direct inserts" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.003"/>
+  <testcase name="service and UI share the same repository instance" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.005"/>
+  <testcase name="initial state is not tracking" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.001"/>
+  <testcase name="getLiveSessionSeconds returns 0 when not tracking" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.001"/>
+  <testcase name="stop when not tracking does not crash" classname="com.whatsapptracker.pc.tracker.TrackerServiceTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

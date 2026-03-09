@@ -2,9 +2,11 @@ package com.whatsapptracker.pc
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +25,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.whatsapptracker.pc.db.Database
+import com.whatsapptracker.pc.db.TopContact
 import com.whatsapptracker.pc.db.UsageEvent
 import com.whatsapptracker.pc.db.UsageEventRepository
 import com.whatsapptracker.pc.tracker.TrackerService
@@ -78,24 +82,27 @@ fun main() = application {
             exitApplication()
         },
         title = "Ravdesk",
-        state = WindowState(size = DpSize(420.dp, 720.dp)),
+        state = WindowState(size = DpSize(440.dp, 800.dp)),
     ) {
         MaterialTheme(colorScheme = RavdeskDarkColors) {
             // Live data (polled every 1s — cheap, no DB)
             var liveSeconds by remember { mutableStateOf(0L) }
             var isActive by remember { mutableStateOf(false) }
+            var activeChat by remember { mutableStateOf<String?>(null) } // To show live in the best friend/hero
 
             // DB data (polled every 5s on IO thread)
             var todaySessions by remember { mutableStateOf(emptyList<UsageEvent>()) }
             var todayTotalSeconds by remember { mutableStateOf(0L) }
             var weeklyTotals by remember { mutableStateOf(emptyMap<LocalDate, Long>()) }
             var sessionCount by remember { mutableStateOf(0) }
+            var topContacts by remember { mutableStateOf(emptyList<TopContact>()) }
 
             // Fast poll: live counter (1s, no DB hit)
             LaunchedEffect(Unit) {
                 while (true) {
                     liveSeconds = trackerService.getLiveSessionSeconds()
                     isActive = trackerService.isCurrentlyTracking
+                    activeChat = trackerService.currentChatName
                     delay(1000)
                 }
             }
@@ -108,6 +115,7 @@ fun main() = application {
                         todayTotalSeconds = repository.getTodayTotalSeconds()
                         weeklyTotals = repository.getWeeklyTotals()
                         sessionCount = repository.getTodaySessionCount()
+                        topContacts = repository.getTopContactsAllTime(10)
                     }
                     delay(5000)
                 }
@@ -117,9 +125,11 @@ fun main() = application {
                 todayTotalSeconds = todayTotalSeconds,
                 liveSessionSeconds = liveSeconds,
                 isLiveActive = isActive,
+                activeChat = activeChat,
                 sessionCount = sessionCount,
                 todaySessions = todaySessions,
                 weeklyTotals = weeklyTotals,
+                topContacts = topContacts,
             )
         }
     }
@@ -130,139 +140,205 @@ fun RavdeskDashboard(
     todayTotalSeconds: Long,
     liveSessionSeconds: Long,
     isLiveActive: Boolean,
+    activeChat: String?,
     sessionCount: Int,
     todaySessions: List<UsageEvent>,
     weeklyTotals: Map<LocalDate, Long>,
+    topContacts: List<TopContact>,
 ) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
-            .padding(horizontal = 24.dp),
+            .background(DarkBackground),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         // ── Header ──
         item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Ravdesk",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary,
-                fontWeight = FontWeight.Black,
-            )
-            Text(
-                text = "WhatsApp Desktop Tracker",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Ravdesk",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Black,
+                )
+                Text(
+                    text = "WhatsApp Desktop Tracker",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
 
         // ── Hero: Today's Screen Time ──
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(WhatsAppTeal, WhatsAppDarkGreen, WhatsAppGreen)
-                            )
-                        )
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 ) {
-                    Column {
-                        Text(
-                            text = "Screen Time",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White.copy(alpha = 0.8f),
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(WhatsAppTeal, WhatsAppDarkGreen, WhatsAppGreen)
+                                )
+                            )
+                            .padding(horizontal = 24.dp, vertical = 32.dp),
+                    ) {
+                        Column {
+                            Text(
+                                text = "Screen Time",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White.copy(alpha = 0.8f),
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                        val totalDisplaySeconds = todayTotalSeconds + if (isLiveActive) liveSessionSeconds else 0
-                        Text(
-                            text = formatDuration(totalDisplaySeconds),
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "on WhatsApp today",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.7f),
-                        )
+                            val totalDisplaySeconds = todayTotalSeconds + if (isLiveActive) liveSessionSeconds else 0
+                            Text(
+                                text = formatDuration(totalDisplaySeconds),
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "on WhatsApp today",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.7f),
+                            )
+                        }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // ── Live Session Indicator ──
         item {
-            LiveSessionCard(isLiveActive, liveSessionSeconds)
-            Spacer(modifier = Modifier.height(28.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                LiveSessionCard(isLiveActive, activeChat, liveSessionSeconds)
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        // ── Top Entertainers (Horizontal Pills) ──
+        if (topContacts.isNotEmpty()) {
+            item {
+                Column {
+                    Text(
+                        text = "Top Entertainers",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    val scrollState = rememberScrollState()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(scrollState)
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        topContacts.forEachIndexed { index, contact ->
+                            // Calculate live duration additive if they are the active chat
+                            val addLive = if (isLiveActive && contact.chatName == activeChat) liveSessionSeconds else 0L
+                            EntertainerPill(
+                                rank = index + 1,
+                                name = contact.chatName ?: "Unknown",
+                                durationSeconds = contact.totalSeconds + addLive
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+            
+            // ── Best Friend Card ──
+            item {
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    val bestFriend = topContacts.first()
+                    val addLive = if (isLiveActive && bestFriend.chatName == activeChat) liveSessionSeconds else 0L
+                    BestFriendCard(
+                        name = bestFriend.chatName ?: "Unknown",
+                        durationSeconds = bestFriend.totalSeconds + addLive
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
         }
 
         // ── Stats Row ──
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Sessions",
-                    value = "$sessionCount",
-                    emoji = "💬"
-                )
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Avg Length",
-                    value = if (sessionCount > 0) formatDuration(todayTotalSeconds / sessionCount) else "—",
-                    emoji = "⏱️"
-                )
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Sessions",
+                        value = "$sessionCount",
+                        emoji = "💬"
+                    )
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Avg Length",
+                        value = if (sessionCount > 0) formatDuration(todayTotalSeconds / sessionCount) else "—",
+                        emoji = "⏱️"
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
-            Spacer(modifier = Modifier.height(28.dp))
         }
 
         // ── Weekly Chart ──
         item {
-            SectionLabel("Last 7 Days")
-            Spacer(modifier = Modifier.height(8.dp))
-            WeeklyBarChart(weeklyTotals)
-            Spacer(modifier = Modifier.height(28.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                SectionLabel("Last 7 Days")
+                Spacer(modifier = Modifier.height(16.dp))
+                WeeklyBarChart(weeklyTotals)
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
 
         // ── Today's Sessions ──
         item {
-            SectionLabel("Today's Sessions")
-            Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                SectionLabel("Today's Breakdown")
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         if (todaySessions.isEmpty()) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-                ) {
-                    Text(
-                        text = "No sessions recorded today. Open WhatsApp to start tracking.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextMuted,
-                        modifier = Modifier.padding(20.dp)
-                    )
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+                    ) {
+                        Text(
+                            text = "No sessions recorded today. Open WhatsApp to start tracking.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextMuted,
+                            modifier = Modifier.padding(20.dp)
+                        )
+                    }
                 }
             }
         } else {
             items(todaySessions) { event ->
-                SessionRow(event)
-                Spacer(modifier = Modifier.height(8.dp))
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    SessionRow(event, isLiveActive, activeChat, liveSessionSeconds)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
 
@@ -273,7 +349,7 @@ fun RavdeskDashboard(
 // ── Components ──────────────────────────────────────────────────────
 
 @Composable
-fun LiveSessionCard(isActive: Boolean, seconds: Long) {
+fun LiveSessionCard(isActive: Boolean, activeChat: String?, seconds: Long) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,
@@ -308,10 +384,12 @@ fun LiveSessionCard(isActive: Boolean, seconds: Long) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (isActive) "Active Session" else "No active session",
+                    text = if (isActive) (activeChat ?: "Menu") else "No active session",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (isActive) TextPrimary else TextMuted,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (isActive) {
                     Text(
@@ -328,6 +406,116 @@ fun LiveSessionCard(isActive: Boolean, seconds: Long) {
                     style = MaterialTheme.typography.labelSmall,
                     color = WhatsAppGreen.copy(alpha = pulseAlpha),
                     fontWeight = FontWeight.Black,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EntertainerPill(rank: Int, name: String, durationSeconds: Long) {
+    val isFirst = rank == 1
+    val backgroundBrush = if (isFirst) {
+        Brush.horizontalGradient(listOf(Color(0xFF9C27B0), AccentPurple))
+    } else {
+        Brush.horizontalGradient(listOf(DarkSurfaceVariant, DarkSurfaceVariant))
+    }
+
+    Box(
+        modifier = Modifier
+            .width(160.dp)
+            .height(100.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(backgroundBrush)
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🍿",
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = "#$rank",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isFirst) Color.White.copy(alpha = 0.6f) else TextMuted,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Column {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isFirst) Color.White else TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = formatDuration(durationSeconds),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isFirst) Color.White.copy(alpha = 0.8f) else WhatsAppGreen,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BestFriendCard(name: String, durationSeconds: Long) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = WhatsAppDarkGreen.copy(alpha = 0.15f)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(WhatsAppGreen.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("💖", fontSize = 28.sp)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Best Friend",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WhatsAppGreen,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${formatDuration(durationSeconds)} total spent chatting",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
                 )
             }
         }
@@ -441,10 +629,9 @@ fun WeeklyBarChart(weeklyTotals: Map<LocalDate, Long>) {
 }
 
 @Composable
-fun SessionRow(event: UsageEvent) {
-    val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val startTime = dateFormat.format(Date(event.timestampStart))
-    val endTime = dateFormat.format(Date(event.timestampEnd))
+fun SessionRow(event: UsageEvent, isLiveActive: Boolean, activeChat: String?, liveSessionSeconds: Long) {
+    val isCurrentActive = isLiveActive && activeChat == event.chatName
+    val totalSeconds = event.durationSeconds + if (isCurrentActive) liveSessionSeconds else 0L
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -459,10 +646,12 @@ fun SessionRow(event: UsageEvent) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "$startTime – $endTime",
+                    text = event.chatName ?: "Menu/Legacy",
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextPrimary,
                     fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Box(
@@ -472,7 +661,7 @@ fun SessionRow(event: UsageEvent) {
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = formatDuration(event.durationSeconds),
+                    text = formatDuration(totalSeconds),
                     style = MaterialTheme.typography.labelLarge,
                     color = WhatsAppGreen,
                     fontWeight = FontWeight.Bold,

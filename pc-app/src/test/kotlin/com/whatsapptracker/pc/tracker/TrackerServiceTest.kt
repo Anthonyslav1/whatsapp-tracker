@@ -35,6 +35,7 @@ class TrackerServiceTest {
     fun `initial state is not tracking`() {
         assertFalse(service.isCurrentlyTracking)
         assertEquals(0L, service.currentSessionStartMs)
+        assertEquals(null, service.currentChatName)
     }
 
     @Test
@@ -45,53 +46,26 @@ class TrackerServiceTest {
     // ── stop() graceful shutdown ──
 
     @Test
-    fun `stop when not tracking does not crash`() {
-        service.stop() // should not throw
-        assertFalse(service.isCurrentlyTracking)
-    }
-
-    @Test
     fun `stop flushes active session state`() {
-        // Manually simulate being in a tracking state
-        // We can't directly set private fields, but we can test stop() doesn't crash
-        // when called without startTracking()
         service.stop()
         assertFalse(service.isCurrentlyTracking)
         assertEquals(0L, service.currentSessionStartMs)
+        assertEquals(null, service.currentChatName)
     }
 
     // ── Repository integration ──
 
     @Test
-    fun `repository correctly counts sessions after direct inserts`() {
-        // This verifies the shared repository pattern works
+    fun `repository upserts handle direct inserts properly`() {
         val now = System.currentTimeMillis()
-        repository.insertEvent(
-            com.whatsapptracker.pc.db.UsageEvent(
-                timestampStart = now - 60_000,
-                timestampEnd = now,
-                durationSeconds = 60
-            )
-        )
+        repository.upsertEvent(now, "TestChat", 60)
+        
         assertEquals(1, repository.getTodaySessionCount())
         assertEquals(60L, repository.getTodayTotalSeconds())
-    }
 
-    @Test
-    fun `service and UI share the same repository instance`() {
-        // Insert via the same repo the service uses
-        val now = System.currentTimeMillis()
-        repository.insertEvent(
-            com.whatsapptracker.pc.db.UsageEvent(
-                timestampStart = now - 5000,
-                timestampEnd = now,
-                durationSeconds = 5
-            )
-        )
-
-        // Query from the same repo — should see the insert
-        val sessions = repository.getTodaySessions()
-        assertEquals(1, sessions.size)
-        assertEquals(5L, sessions[0].durationSeconds)
+        // Another insert for the same chat adds to total
+        repository.upsertEvent(now, "TestChat", 20)
+        assertEquals(1, repository.getTodaySessionCount(), "Should still be 1 unified session/row for TestChat today")
+        assertEquals(80L, repository.getTodayTotalSeconds())
     }
 }
