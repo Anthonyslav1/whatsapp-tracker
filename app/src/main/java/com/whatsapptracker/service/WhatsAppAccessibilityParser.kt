@@ -517,8 +517,17 @@ class WhatsAppAccessibilityParser @Inject constructor() {
         if (lower == "admin") return true
         if (lower == "muted") return true
 
-        // ── App name ─────────────────────────────────────────────────────────
+        // ── App name and generic UI strings ──────────────────────────────────
         if (lower == "whatsapp") return true
+        if (lower.contains("touch the fingerprint sensor")) return true
+        if (lower.contains("ask meta ai")) return true
+        if (lower == "search...") return true
+        if (lower == "search") return true
+        if (lower == "chats") return true
+        if (lower == "updates") return true
+        if (lower == "calls") return true
+        if (lower == "communities") return true
+        if (lower == "settings") return true
 
         return false
     }
