@@ -7,11 +7,12 @@ import androidx.navigation.compose.composable
 import com.whatsapptracker.ui.screens.DashboardScreen
 import com.whatsapptracker.ui.screens.SetupScreen
 import com.whatsapptracker.ui.screens.YearlyReportScreen
+import kotlinx.serialization.Serializable
 
-object Routes {
-    const val SETUP = "setup"
-    const val DASHBOARD = "dashboard"
-    const val YEARLY_REPORT = "yearly_report"
+sealed class Routes {
+    @Serializable data object Setup : Routes()
+    @Serializable data object Dashboard : Routes()
+    @Serializable data object YearlyReport : Routes()
 }
 
 @Composable
@@ -21,30 +22,30 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = if (isAccessibilityEnabled) Routes.DASHBOARD else Routes.SETUP
+        startDestination = if (isAccessibilityEnabled) Routes.Dashboard else Routes.Setup
     ) {
-        composable(Routes.SETUP) {
+        composable<Routes.Setup> {
             SetupScreen(
                 onPermissionGranted = {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.SETUP) { inclusive = true }
+                    navController.navigate(Routes.Dashboard) {
+                        popUpTo(Routes.Setup) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Routes.DASHBOARD) {
+        composable<Routes.Dashboard> {
             DashboardScreen(
                 onNavigateToWrapped = {
-                    navController.navigate(Routes.YEARLY_REPORT)
+                    navController.navigate(Routes.YearlyReport)
                 },
                 onNavigateToSetup = {
-                    navController.navigate(Routes.SETUP)
+                    navController.navigate(Routes.Setup)
                 }
             )
         }
 
-        composable(Routes.YEARLY_REPORT) {
+        composable<Routes.YearlyReport> {
             YearlyReportScreen(
                 onBack = { navController.popBackStack() }
             )

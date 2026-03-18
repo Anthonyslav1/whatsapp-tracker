@@ -4,14 +4,18 @@ import android.app.Activity;
 import android.app.Service;
 import android.view.View;
 import androidx.fragment.app.Fragment;
+import androidx.hilt.work.HiltWorkerFactory;
+import androidx.hilt.work.WorkerAssistedFactory;
+import androidx.hilt.work.WorkerFactoryModule_ProvideFactoryFactory;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
+import androidx.work.ListenableWorker;
 import com.whatsapptracker.data.db.AppDatabase;
 import com.whatsapptracker.data.db.ChatSessionDao;
 import com.whatsapptracker.data.repository.UsageRepository;
+import com.whatsapptracker.data.repository.UsageRepositoryImpl;
 import com.whatsapptracker.di.DatabaseModule_ProvideAppDatabaseFactory;
 import com.whatsapptracker.di.DatabaseModule_ProvideChatSessionDaoFactory;
-import com.whatsapptracker.di.RepositoryModule_ProvideUsageRepositoryFactory;
 import com.whatsapptracker.service.SessionTrackerManager;
 import com.whatsapptracker.service.WhatsAppAccessibilityParser;
 import com.whatsapptracker.service.WhatsAppAccessibilityService;
@@ -456,10 +460,10 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
       public T get() {
         switch (id) {
           case 0: // com.whatsapptracker.ui.viewmodel.DashboardViewModel 
-          return (T) new DashboardViewModel(singletonCImpl.provideUsageRepositoryProvider.get());
+          return (T) new DashboardViewModel(singletonCImpl.bindUsageRepositoryProvider.get());
 
           case 1: // com.whatsapptracker.ui.viewmodel.YearlyReportViewModel 
-          return (T) new YearlyReportViewModel(singletonCImpl.provideUsageRepositoryProvider.get());
+          return (T) new YearlyReportViewModel(singletonCImpl.bindUsageRepositoryProvider.get());
 
           default: throw new AssertionError(id);
         }
@@ -556,7 +560,9 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
 
     private Provider<AppDatabase> provideAppDatabaseProvider;
 
-    private Provider<UsageRepository> provideUsageRepositoryProvider;
+    private Provider<UsageRepositoryImpl> usageRepositoryImplProvider;
+
+    private Provider<UsageRepository> bindUsageRepositoryProvider;
 
     private Provider<SessionTrackerManager> sessionTrackerManagerProvider;
 
@@ -566,6 +572,10 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
 
     }
 
+    private HiltWorkerFactory hiltWorkerFactory() {
+      return WorkerFactoryModule_ProvideFactoryFactory.provideFactory(Collections.<String, javax.inject.Provider<WorkerAssistedFactory<? extends ListenableWorker>>>emptyMap());
+    }
+
     private ChatSessionDao chatSessionDao() {
       return DatabaseModule_ProvideChatSessionDaoFactory.provideChatSessionDao(provideAppDatabaseProvider.get());
     }
@@ -573,12 +583,14 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
     @SuppressWarnings("unchecked")
     private void initialize(final ApplicationContextModule applicationContextModuleParam) {
       this.provideAppDatabaseProvider = DoubleCheck.provider(new SwitchingProvider<AppDatabase>(singletonCImpl, 1));
-      this.provideUsageRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UsageRepository>(singletonCImpl, 0));
+      this.usageRepositoryImplProvider = new SwitchingProvider<>(singletonCImpl, 0);
+      this.bindUsageRepositoryProvider = DoubleCheck.provider((Provider) usageRepositoryImplProvider);
       this.sessionTrackerManagerProvider = DoubleCheck.provider(new SwitchingProvider<SessionTrackerManager>(singletonCImpl, 2));
     }
 
     @Override
     public void injectWhatsAppTrackerApp(WhatsAppTrackerApp whatsAppTrackerApp) {
+      injectWhatsAppTrackerApp2(whatsAppTrackerApp);
     }
 
     @Override
@@ -596,6 +608,11 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
       return new ServiceCBuilder(singletonCImpl);
     }
 
+    private WhatsAppTrackerApp injectWhatsAppTrackerApp2(WhatsAppTrackerApp instance) {
+      WhatsAppTrackerApp_MembersInjector.injectWorkerFactory(instance, hiltWorkerFactory());
+      return instance;
+    }
+
     private static final class SwitchingProvider<T> implements Provider<T> {
       private final SingletonCImpl singletonCImpl;
 
@@ -610,8 +627,8 @@ public final class DaggerWhatsAppTrackerApp_HiltComponents_SingletonC {
       @Override
       public T get() {
         switch (id) {
-          case 0: // com.whatsapptracker.data.repository.UsageRepository 
-          return (T) RepositoryModule_ProvideUsageRepositoryFactory.provideUsageRepository(singletonCImpl.chatSessionDao());
+          case 0: // com.whatsapptracker.data.repository.UsageRepositoryImpl 
+          return (T) new UsageRepositoryImpl(singletonCImpl.chatSessionDao());
 
           case 1: // com.whatsapptracker.data.db.AppDatabase 
           return (T) DatabaseModule_ProvideAppDatabaseFactory.provideAppDatabase(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));

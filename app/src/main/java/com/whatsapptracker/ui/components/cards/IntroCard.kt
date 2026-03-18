@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whatsapptracker.R
-import com.whatsapptracker.data.repository.YearlyReportData
+import com.whatsapptracker.data.model.YearlyReportData
 
 @Composable
 fun IntroCard(data: YearlyReportData, isVisible: Boolean) {

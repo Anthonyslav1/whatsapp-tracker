@@ -1,5 +1,7 @@
 package com.whatsapptracker;
 
+import androidx.hilt.work.HiltWrapper_WorkerFactoryModule;
+import com.whatsapptracker.di.AppModule;
 import com.whatsapptracker.di.DatabaseModule;
 import com.whatsapptracker.di.RepositoryModule;
 import com.whatsapptracker.service.WhatsAppAccessibilityService_GeneratedInjector;
@@ -129,9 +131,11 @@ public final class WhatsAppTrackerApp_HiltComponents {
 
   @Component(
       modules = {
+          AppModule.class,
           ApplicationContextModule.class,
           DatabaseModule.class,
           HiltWrapper_FragmentGetContextFix_FragmentGetContextFixModule.class,
+          HiltWrapper_WorkerFactoryModule.class,
           RepositoryModule.class,
           ActivityRetainedCBuilderModule.class,
           ServiceCBuilderModule.class

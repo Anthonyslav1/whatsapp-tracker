@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whatsapptracker.R
-import com.whatsapptracker.data.repository.YearlyReportData
+import com.whatsapptracker.data.model.YearlyReportData
 import java.time.Month
 import java.time.format.TextStyle
 import java.util.Locale

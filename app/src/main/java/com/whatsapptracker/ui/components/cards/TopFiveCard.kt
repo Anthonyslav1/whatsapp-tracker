@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.R
-import com.whatsapptracker.data.repository.YearlyReportData
+import com.whatsapptracker.data.model.YearlyReportData
 
 @Composable
 fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {

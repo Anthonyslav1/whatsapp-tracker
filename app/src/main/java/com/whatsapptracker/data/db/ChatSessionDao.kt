@@ -1,4 +1,4 @@
-package com.whatsapptracker.data.db
+ package com.whatsapptracker.data.db
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
@@ -120,18 +120,3 @@ interface ChatSessionDao {
     """)
     suspend fun getTopEntertainerYearly(startTime: Long, endTime: Long): ContactDuration?
 }
-
-data class ContactDuration(
-    val contactName: String,
-    val totalDuration: Long
-)
-
-data class MonthlyDuration(
-    val month: Int,
-    val totalDuration: Long
-)
-
-data class DayOfWeekDuration(
-    val dayOfWeek: Int,
-    val totalDuration: Long
-)

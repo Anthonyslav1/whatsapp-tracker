@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.whatsapptracker.R
-import com.whatsapptracker.data.repository.YearlyReportData
+import com.whatsapptracker.data.model.YearlyReportData
 import com.whatsapptracker.ui.components.cards.*
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.YearlyReportViewModel

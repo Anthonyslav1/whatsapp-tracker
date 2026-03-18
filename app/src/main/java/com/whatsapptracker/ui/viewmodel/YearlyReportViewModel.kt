@@ -3,7 +3,7 @@ package com.whatsapptracker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.whatsapptracker.data.repository.UsageRepository
-import com.whatsapptracker.data.repository.YearlyReportData
+import com.whatsapptracker.data.model.YearlyReportData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

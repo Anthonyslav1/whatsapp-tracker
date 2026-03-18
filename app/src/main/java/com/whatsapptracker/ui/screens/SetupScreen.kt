@@ -26,13 +26,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whatsapptracker.R
-import com.whatsapptracker.checkAccessibilityEnabled
+import com.whatsapptracker.utils.isAccessibilityServiceEnabled
 import com.whatsapptracker.ui.theme.*
 
 @Composable
 fun SetupScreen(onPermissionGranted: () -> Unit) {
     val context = LocalContext.current
-    var isEnabled by remember { mutableStateOf(checkAccessibilityEnabled(context)) }
+    var isEnabled by remember { mutableStateOf(context.isAccessibilityServiceEnabled()) }
 
     // Pulse animation for the icon
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")

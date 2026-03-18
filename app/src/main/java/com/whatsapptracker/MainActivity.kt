@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.rememberNavController
 import com.whatsapptracker.navigation.AppNavGraph
 import com.whatsapptracker.ui.theme.WhatsAppTrackerTheme
+import com.whatsapptracker.utils.isAccessibilityServiceEnabled
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -38,26 +39,15 @@ class MainActivity : ComponentActivity() {
 fun MainApp() {
     val context = LocalContext.current
     val navController = rememberNavController()
-    var isAccessibilityEnabled by remember { mutableStateOf(checkAccessibilityEnabled(context)) }
+    var isAccessibilityEnabled by remember { mutableStateOf(context.isAccessibilityServiceEnabled()) }
 
     // Re-check when app resumes (user might have just enabled it in Settings)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        isAccessibilityEnabled = checkAccessibilityEnabled(context)
+        isAccessibilityEnabled = context.isAccessibilityServiceEnabled()
     }
 
     AppNavGraph(
         navController = navController,
         isAccessibilityEnabled = isAccessibilityEnabled
     )
-}
-
-fun checkAccessibilityEnabled(context: Context): Boolean {
-    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-        ?: return false
-    val enabledServices = am.getEnabledAccessibilityServiceList(
-        AccessibilityServiceInfo.FEEDBACK_GENERIC
-    )
-    return enabledServices.any {
-        it.resolveInfo.serviceInfo.packageName == context.packageName
-    }
 }

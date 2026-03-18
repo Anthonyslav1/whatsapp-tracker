@@ -1,20 +1,18 @@
 package com.whatsapptracker.di
 
-import com.whatsapptracker.data.db.ChatSessionDao
 import com.whatsapptracker.data.repository.UsageRepository
+import com.whatsapptracker.data.repository.UsageRepositoryImpl
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideUsageRepository(dao: ChatSessionDao): UsageRepository {
-        return UsageRepository(dao)
-    }
+    abstract fun bindUsageRepository(impl: UsageRepositoryImpl): UsageRepository
 }

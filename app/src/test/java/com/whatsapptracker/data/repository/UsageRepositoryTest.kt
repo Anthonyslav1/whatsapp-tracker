@@ -32,6 +32,7 @@ class UsageRepositoryTest {
         coEvery { dao.getTotalSessionCount(any(), any()) } returns 3
         coEvery { dao.getLongestSession(any(), any()) } returns mockk(relaxed = true)
         coEvery { dao.getMostActiveDayOfWeek(any(), any()) } returns DayOfWeekDuration(1, 5000L) // 1 in SQLite = Monday
+        coEvery { dao.getTopEntertainerYearly(any(), any()) } returns ContactDuration("Bob", 1000L)
 
         val report = repository.getYearlyReport(2024)
 
@@ -41,5 +42,7 @@ class UsageRepositoryTest {
         assertEquals(Month.JANUARY, report.monthlyDurations[0].first)
         assertEquals(Month.FEBRUARY, report.monthlyDurations[1].first)
         assertEquals(DayOfWeek.MONDAY, report.mostActiveDayOfWeek)
+        assertEquals("Bob", report.topEntertainer?.contactName)
+        assertEquals(1000L, report.topEntertainer?.totalDuration)
     }
 }

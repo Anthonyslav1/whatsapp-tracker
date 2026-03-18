@@ -1,6 +1,7 @@
 package com.whatsapptracker.di
 
 import android.content.Context
+import androidx.room.Room
 import com.whatsapptracker.data.db.AppDatabase
 import com.whatsapptracker.data.db.ChatSessionDao
 import dagger.Module
@@ -17,7 +18,11 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getInstance(context)
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "whatsapp_tracker.db"
+        ).build()
     }
 
     @Provides
