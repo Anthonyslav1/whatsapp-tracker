@@ -25,6 +25,11 @@ class DashboardViewModel @Inject constructor(
     val todayTopEntertainers: StateFlow<List<ContactDuration>> = repository.getTopEntertainers(3)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val smartInsights: StateFlow<String> = repository.getSmartInsights(
+        LocalDate.now().minusDays(7).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+        LocalDate.now().plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Analyzing your communication metadata...")
+
     val weeklyTotals: StateFlow<Map<LocalDate, Long>> = repository.getWeeklyTotals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 }

@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.whatsapptracker.R
 import com.whatsapptracker.ui.components.*
+import com.whatsapptracker.ui.components.cards.SmartInsightsCard
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.DashboardViewModel
 
@@ -32,6 +33,7 @@ fun DashboardScreen(
     val todayDuration by viewModel.todayTotalDuration.collectAsStateWithLifecycle()
     val topContacts by viewModel.todayTopContacts.collectAsStateWithLifecycle()
     val topEntertainers by viewModel.todayTopEntertainers.collectAsStateWithLifecycle()
+    val smartInsights by viewModel.smartInsights.collectAsStateWithLifecycle()
     val weeklyTotals by viewModel.weeklyTotals.collectAsStateWithLifecycle()
 
     Column(
@@ -108,6 +110,9 @@ fun DashboardScreen(
         SectionHeader(stringResource(R.string.last_7_days))
         Spacer(modifier = Modifier.height(4.dp))
         WeeklyChart(weeklyTotals)
+
+        Spacer(modifier = Modifier.height(24.dp))
+        SmartInsightsCard(insightText = smartInsights)
 
         Spacer(modifier = Modifier.height(40.dp))
     }

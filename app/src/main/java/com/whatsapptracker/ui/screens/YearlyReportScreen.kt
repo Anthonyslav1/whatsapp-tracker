@@ -58,7 +58,7 @@ fun YearlyReportScreen(
             }
             reportData != null -> {
                 val data = reportData!!
-                val totalCards = 7
+                val totalCards = 8
                 val pagerState = rememberPagerState(pageCount = { totalCards })
                 val haptic = LocalHapticFeedback.current
 
@@ -175,6 +175,7 @@ private fun WrappedCard(page: Int, data: YearlyReportData, isVisible: Boolean) {
         listOf(WrappedOrange1, WrappedOrange2, Color(0xFFFF9800)),
         listOf(WrappedCyan1, WrappedCyan2, Color(0xFF00BCD4)),
         listOf(WrappedPurple1, WrappedPink1, Color(0xFFFF4081)),
+        listOf(WrappedIndigo1, WrappedGreen1, PrimaryPurple),
     )
 
     Card(
@@ -195,21 +196,37 @@ private fun WrappedCard(page: Int, data: YearlyReportData, isVisible: Boolean) {
                 0 -> IntroCard(data, isVisible)
                 1 -> TotalTimeCard(data, isVisible)
                 2 -> BestFriendCard(data, isVisible)
-                3 -> TopFiveCard(data, isVisible)
-                4 -> MostActiveMonthCard(data, isVisible)
-                5 -> FunFactsCard(data, isVisible)
-                6 -> EntertainerCard(data, isVisible)
+                3 -> RelationshipScoreCard(data, isVisible)
+                4 -> TopFiveCard(data, isVisible)
+                5 -> MostActiveMonthCard(data, isVisible)
+                6 -> FunFactsCard(data, isVisible)
+                7 -> EntertainerCard(data, isVisible)
             }
 
-            // Screenshot hint at bottom
-            Text(
-                text = stringResource(R.string.screenshot_hint),
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.4f),
+            // Share hint at bottom
+            val context = androidx.compose.ui.platform.LocalContext.current
+            TextButton(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp)
-            )
+                    .padding(bottom = 8.dp),
+                onClick = {
+                    val hours = data.totalDurationMs / 3600000
+                    val bff = data.topRelationshipContacts.firstOrNull()?.contactName ?: "nobody"
+                    val shareText = "I spent $hours hours on WhatsApp this year.\nMy true Best Friend by Engagement Score is $bff.\n\nCheck your own communication metadata!"
+                    val intent = android.content.Intent().apply {
+                        action = android.content.Intent.ACTION_SEND
+                        putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                        type = "text/plain"
+                    }
+                    context.startActivity(android.content.Intent.createChooser(intent, "Share your Meta"))
+                }
+            ) {
+                Text(
+                    text = "Share Your Meta \uD83D\uDE80",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            }
         }
     }
 }
