@@ -9,6 +9,7 @@ data class YearlyReportData(
     val year: Int,
     val totalDurationMs: Long,
     val topContacts: List<ContactDuration>,
+    val topRelationshipContacts: List<ContactDuration>,
     val monthlyDurations: List<Pair<Month, Long>>,
     val longestSession: ChatSession?,
     val uniqueContactCount: Int,

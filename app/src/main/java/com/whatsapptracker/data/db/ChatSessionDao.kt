@@ -36,6 +36,16 @@ interface ChatSessionDao {
     fun getTopContacts(startTime: Long, endTime: Long, limit: Int): Flow<List<ContactDuration>>
 
     @Query("""
+        SELECT contactName, (SUM(durationMs) + (COUNT(id) * 60000)) as totalDuration 
+        FROM chat_sessions 
+        WHERE startTime >= :startTime AND startTime < :endTime AND endTime > 0 AND sessionType = 'CHAT'
+        GROUP BY contactName 
+        ORDER BY totalDuration DESC 
+        LIMIT :limit
+    """)
+    fun getTopContactsByRelationshipScore(startTime: Long, endTime: Long, limit: Int): Flow<List<ContactDuration>>
+
+    @Query("""
         SELECT * FROM chat_sessions 
         WHERE startTime >= :startTime AND startTime < :endTime AND endTime > 0 AND sessionType = 'CHAT'
         ORDER BY startTime ASC
@@ -97,6 +107,16 @@ interface ChatSessionDao {
         LIMIT :limit
     """)
     suspend fun getTopContactsYearly(startTime: Long, endTime: Long, limit: Int): List<ContactDuration>
+
+    @Query("""
+        SELECT contactName, (SUM(durationMs) + (COUNT(id) * 60000)) as totalDuration 
+        FROM chat_sessions 
+        WHERE startTime >= :startTime AND startTime < :endTime AND endTime > 0 AND sessionType = 'CHAT'
+        GROUP BY contactName 
+        ORDER BY totalDuration DESC 
+        LIMIT :limit
+    """)
+    suspend fun getTopContactsByRelationshipScoreYearly(startTime: Long, endTime: Long, limit: Int): List<ContactDuration>
 
     // --- STATUS QUERIES (V2) ---
 

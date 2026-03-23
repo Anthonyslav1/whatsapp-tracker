@@ -11,6 +11,10 @@ interface UsageRepository {
 
     fun getTodayTopContacts(limit: Int): Flow<List<ContactDuration>>
 
+    fun getTopContactsByRelationshipScore(limit: Int): Flow<List<ContactDuration>>
+
+    fun getSmartInsights(startTime: Long, endTime: Long): Flow<String>
+
     fun getTopEntertainers(limit: Int): Flow<List<ContactDuration>>
 
     fun getWeeklyTotals(): Flow<Map<LocalDate, Long>>
