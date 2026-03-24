@@ -33,12 +33,12 @@ fun BestFriendCard(data: YearlyReportData, isVisible: Boolean) {
     ) {
         if (bestFriend != null) {
             Text(
-                text = stringResource(R.string.best_friend_title),
+                text = "MOST TIME SPENT WITH",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White.copy(alpha = alpha * 0.8f),
             )
             Text(
-                text = stringResource(R.string.best_friend_subtitle),
+                text = "LONGEST CHATTER",
                 style = MaterialTheme.typography.displaySmall,
                 color = Color.White.copy(alpha = alpha * 0.8f),
                 fontWeight = FontWeight.Bold,
