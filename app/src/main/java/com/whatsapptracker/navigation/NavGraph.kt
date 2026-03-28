@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 sealed class Routes {
     @Serializable data object Setup : Routes()
     @Serializable data object Dashboard : Routes()
+    @Serializable data object Settings : Routes()
     @Serializable data object YearlyReport : Routes()
 }
 
@@ -47,6 +48,12 @@ fun AppNavGraph(
 
         composable<Routes.YearlyReport> {
             YearlyReportScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Routes.Settings> {
+            com.whatsapptracker.ui.screens.SettingsScreen(
                 onBack = { navController.popBackStack() }
             )
         }

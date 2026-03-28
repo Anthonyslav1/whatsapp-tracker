@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,21 +16,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.whatsapptracker.R
 import com.whatsapptracker.ui.components.*
 import com.whatsapptracker.ui.components.cards.SmartInsightsCard
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.DashboardViewModel
+import com.whatsapptracker.utils.isAccessibilityServiceEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigateToWrapped: () -> Unit,
     onNavigateToSetup: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    var isServiceEnabled by remember { mutableStateOf(context.isAccessibilityServiceEnabled()) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        isServiceEnabled = context.isAccessibilityServiceEnabled()
+    }
+
     val todayDuration by viewModel.todayTotalDuration.collectAsStateWithLifecycle()
     val topContacts by viewModel.todayTopContacts.collectAsStateWithLifecycle()
     val topEntertainers by viewModel.todayTopEntertainers.collectAsStateWithLifecycle()
@@ -65,13 +77,38 @@ fun DashboardScreen(
                     color = TextSecondary,
                 )
             }
-            IconButton(onClick = onNavigateToSetup) {
+            IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = stringResource(R.string.settings),
                     tint = TextSecondary,
                 )
             }
+        }
+
+        if (!isServiceEnabled) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                onClick = onNavigateToSetup
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.service_dead_warning),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // Today's total time card — more padding for breathing room

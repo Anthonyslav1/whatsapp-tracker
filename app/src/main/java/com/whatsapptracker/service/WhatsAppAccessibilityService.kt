@@ -13,6 +13,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Job
 import javax.inject.Inject
+import android.content.Intent
+import android.content.IntentFilter
+import com.whatsapptracker.receiver.ScreenStateReceiver
 
 @AndroidEntryPoint
 class WhatsAppAccessibilityService : AccessibilityService() {
@@ -25,6 +28,7 @@ class WhatsAppAccessibilityService : AccessibilityService() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var debounceJob: Job? = null
+    private var screenStateReceiver: ScreenStateReceiver? = null
 
     private val whatsappPackages = setOf(
         "com.whatsapp",
@@ -89,6 +93,11 @@ class WhatsAppAccessibilityService : AccessibilityService() {
             flags = AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
             notificationTimeout = 100
         }
+        
+        screenStateReceiver = ScreenStateReceiver(sessionTracker)
+        val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+        registerReceiver(screenStateReceiver, filter)
+        
         Log.d(TAG, "Service configured")
     }
 
@@ -244,6 +253,12 @@ class WhatsAppAccessibilityService : AccessibilityService() {
         Log.d(TAG, "Service destroyed — ending session")
         sessionTracker.endSession()
         serviceScope.cancel()
+        
+        screenStateReceiver?.let {
+            unregisterReceiver(it)
+            screenStateReceiver = null
+        }
+        
         super.onDestroy()
     }
 
