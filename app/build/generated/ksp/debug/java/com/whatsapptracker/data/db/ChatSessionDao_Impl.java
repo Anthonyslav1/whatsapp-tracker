@@ -283,6 +283,55 @@ public final class ChatSessionDao_Impl implements ChatSessionDao {
   }
 
   @Override
+  public Flow<List<ContactDuration>> getTopContactsByRelationshipScore(final long startTime,
+      final long endTime, final int limit) {
+    final String _sql = "\n"
+            + "        SELECT contactName, (SUM(durationMs) + (COUNT(id) * 60000)) as totalDuration \n"
+            + "        FROM chat_sessions \n"
+            + "        WHERE startTime >= ? AND startTime < ? AND endTime > 0 AND sessionType = 'CHAT'\n"
+            + "        GROUP BY contactName \n"
+            + "        ORDER BY totalDuration DESC \n"
+            + "        LIMIT ?\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 3);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, endTime);
+    _argIndex = 3;
+    _statement.bindLong(_argIndex, limit);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"chat_sessions"}, new Callable<List<ContactDuration>>() {
+      @Override
+      @NonNull
+      public List<ContactDuration> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfContactName = 0;
+          final int _cursorIndexOfTotalDuration = 1;
+          final List<ContactDuration> _result = new ArrayList<ContactDuration>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ContactDuration _item;
+            final String _tmpContactName;
+            _tmpContactName = _cursor.getString(_cursorIndexOfContactName);
+            final long _tmpTotalDuration;
+            _tmpTotalDuration = _cursor.getLong(_cursorIndexOfTotalDuration);
+            _item = new ContactDuration(_tmpContactName,_tmpTotalDuration);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
   public Flow<List<ChatSession>> getSessionsInRange(final long startTime, final long endTime) {
     final String _sql = "\n"
             + "        SELECT * FROM chat_sessions \n"
@@ -609,6 +658,52 @@ public final class ChatSessionDao_Impl implements ChatSessionDao {
       final Continuation<? super List<ContactDuration>> $completion) {
     final String _sql = "\n"
             + "        SELECT contactName, SUM(durationMs) as totalDuration \n"
+            + "        FROM chat_sessions \n"
+            + "        WHERE startTime >= ? AND startTime < ? AND endTime > 0 AND sessionType = 'CHAT'\n"
+            + "        GROUP BY contactName \n"
+            + "        ORDER BY totalDuration DESC \n"
+            + "        LIMIT ?\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 3);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, startTime);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, endTime);
+    _argIndex = 3;
+    _statement.bindLong(_argIndex, limit);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ContactDuration>>() {
+      @Override
+      @NonNull
+      public List<ContactDuration> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfContactName = 0;
+          final int _cursorIndexOfTotalDuration = 1;
+          final List<ContactDuration> _result = new ArrayList<ContactDuration>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ContactDuration _item;
+            final String _tmpContactName;
+            _tmpContactName = _cursor.getString(_cursorIndexOfContactName);
+            final long _tmpTotalDuration;
+            _tmpTotalDuration = _cursor.getLong(_cursorIndexOfTotalDuration);
+            _item = new ContactDuration(_tmpContactName,_tmpTotalDuration);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getTopContactsByRelationshipScoreYearly(final long startTime, final long endTime,
+      final int limit, final Continuation<? super List<ContactDuration>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT contactName, (SUM(durationMs) + (COUNT(id) * 60000)) as totalDuration \n"
             + "        FROM chat_sessions \n"
             + "        WHERE startTime >= ? AND startTime < ? AND endTime > 0 AND sessionType = 'CHAT'\n"
             + "        GROUP BY contactName \n"
