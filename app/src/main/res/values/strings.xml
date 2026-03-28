@@ -60,6 +60,12 @@
     <string name="top_entertainers_empty">View WhatsApp statuses to see who entertains you most</string>
     <string name="last_7_days">Last 7 Days</string>
     <string name="settings">Settings</string>
+    <string name="settings_section_permissions">Permissions &amp; Background</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_battery_title">Battery Optimization</string>
+    <string name="settings_battery_warning">Action Required: Ignore restrictions so tracking isn\'t killed</string>
+    <string name="settings_battery_optimized">Unrestricted — Tracking is safe to run in background</string>
+    <string name="service_dead_warning">Tracking is disabled. Tap to re-enable.</string>
 
     <!-- Setup Strings -->
     <string name="setup_tagline">Track your WhatsApp screen time</string>
