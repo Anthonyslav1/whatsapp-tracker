@@ -1,9 +1,15 @@
 package com.whatsapptracker.ui.screens
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -34,6 +40,12 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
     val context = LocalContext.current
     var isEnabled by remember { mutableStateOf(context.isAccessibilityServiceEnabled()) }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        if (isEnabled) onPermissionGranted()
+    }
+
     // Pulse animation for the icon
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulse by infiniteTransition.animateFloat(
@@ -47,7 +59,14 @@ fun SetupScreen(onPermissionGranted: () -> Unit) {
     )
 
     LaunchedEffect(isEnabled) {
-        if (isEnabled) onPermissionGranted()
+        if (isEnabled) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                onPermissionGranted()
+            }
+        }
     }
 
     Box(

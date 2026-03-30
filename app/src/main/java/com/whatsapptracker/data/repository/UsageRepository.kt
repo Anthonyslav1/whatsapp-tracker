@@ -7,15 +7,15 @@ import java.time.LocalDate
 
 interface UsageRepository {
 
-    fun getTodayTotalDuration(): Flow<Long>
+    fun getTodayTotalDuration(date: LocalDate = LocalDate.now()): Flow<Long>
 
-    fun getTodayTopContacts(limit: Int): Flow<List<ContactDuration>>
+    fun getTodayTopContacts(limit: Int = 5, date: LocalDate = LocalDate.now()): Flow<List<ContactDuration>>
 
-    fun getTopContactsByRelationshipScore(limit: Int): Flow<List<ContactDuration>>
+    fun getTopContactsByRelationshipScore(limit: Int = 5, date: LocalDate = LocalDate.now()): Flow<List<ContactDuration>>
 
     fun getSmartInsights(startTime: Long, endTime: Long): Flow<String>
 
-    fun getTopEntertainers(limit: Int): Flow<List<ContactDuration>>
+    fun getTopEntertainers(limit: Int = 5, date: LocalDate = LocalDate.now()): Flow<List<ContactDuration>>
 
     fun getWeeklyTotals(): Flow<Map<LocalDate, Long>>
 

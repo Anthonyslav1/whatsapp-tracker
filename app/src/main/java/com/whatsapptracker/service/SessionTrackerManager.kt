@@ -6,9 +6,16 @@ import com.whatsapptracker.data.db.ChatSessionDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+
+sealed class TrackingState {
+    data object Idle : TrackingState()
+    data class Active(val chatName: String, val type: String = "CHAT") : TrackingState()
+}
 
 @Singleton
 class SessionTrackerManager @Inject constructor(
@@ -22,6 +29,9 @@ class SessionTrackerManager @Inject constructor(
 
     // Isolated IO scope so DB writes survive service interruption
     private val trackerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private val _trackingState = MutableStateFlow<TrackingState>(TrackingState.Idle)
+    val trackingState: StateFlow<TrackingState> = _trackingState
 
     // Public read, private write
     var currentChatName: String? = null
@@ -46,6 +56,7 @@ class SessionTrackerManager @Inject constructor(
         currentChatName = chatName
         currentSessionType = sessionType
         sessionStartTime = System.currentTimeMillis()
+        _trackingState.value = TrackingState.Active(chatName, sessionType)
 
         Log.d(TAG, "Session started: $chatName at $sessionStartTime")
     }
@@ -78,6 +89,7 @@ class SessionTrackerManager @Inject constructor(
         currentChatName = null
         currentSessionType = "CHAT"
         sessionStartTime = 0L
+        _trackingState.value = TrackingState.Idle
 
         if (duration < MIN_SESSION_DURATION_MS) {
             Log.d(TAG, "Session too short (${duration}ms < ${MIN_SESSION_DURATION_MS}ms) — discarding")

@@ -46,6 +46,7 @@ fun DashboardScreen(
         isServiceEnabled = context.isAccessibilityServiceEnabled()
     }
 
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val todayDuration by viewModel.todayTotalDuration.collectAsStateWithLifecycle()
     val topContacts by viewModel.todayTopContacts.collectAsStateWithLifecycle()
     val topEntertainers by viewModel.todayTopEntertainers.collectAsStateWithLifecycle()
@@ -96,6 +97,28 @@ fun DashboardScreen(
                 )
             }
         }
+
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { -50 }, animationSpec = tween(500)) + fadeIn(animationSpec = tween(500))
+        ) {
+            DateSelectorStrip(
+                selectedDate = selectedDate,
+                onDateSelected = { date ->
+                    isVisible = false
+                    viewModel.selectDate(date)
+                }
+            )
+        }
+        
+        LaunchedEffect(selectedDate) {
+            if (!isVisible) {
+                delay(50)
+                isVisible = true
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         if (!isServiceEnabled) {
             Card(

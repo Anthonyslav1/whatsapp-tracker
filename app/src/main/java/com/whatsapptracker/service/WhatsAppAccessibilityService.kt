@@ -13,8 +13,16 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Job
 import javax.inject.Inject
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.whatsapptracker.MainActivity
+import com.whatsapptracker.R
 import com.whatsapptracker.receiver.ScreenStateReceiver
 
 @AndroidEntryPoint
@@ -40,6 +48,8 @@ class WhatsAppAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "WhatsAppAccessibility"
+        private const val NOTIFICATION_ID = 420
+        private const val CHANNEL_ID = "ravdesk_tracking_channel"
         private var debugMode = false
 
         // Known WhatsApp home / list screens — ending a session here is safe
@@ -98,7 +108,57 @@ class WhatsAppAccessibilityService : AccessibilityService() {
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         registerReceiver(screenStateReceiver, filter)
         
+        setupForegroundNotification()
+        
         Log.d(TAG, "Service configured")
+    }
+
+    private fun setupForegroundNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Tracking Status",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows the active session being tracked by Ravdesk"
+                setShowBadge(false)
+            }
+            manager.createNotificationChannel(channel)
+        }
+
+        serviceScope.launch {
+            sessionTracker.trackingState.collect { state ->
+                val (title, text) = when (state) {
+                    is TrackingState.Idle -> "Standing By" to "Waiting for WhatsApp..."
+                    is TrackingState.Active -> "Tracking ${if (state.type == "CHAT") "Chat" else "Status"}" to state.chatName
+                }
+                updateNotification(title, text)
+            }
+        }
+    }
+
+    private fun updateNotification(title: String, text: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.mipmap.ic_launcher_round) // Fallback icon
+            .setOngoing(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setSilent(true)
+            .build()
+
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(NOTIFICATION_ID, notification)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -253,6 +313,9 @@ class WhatsAppAccessibilityService : AccessibilityService() {
         Log.d(TAG, "Service destroyed — ending session")
         sessionTracker.endSession()
         serviceScope.cancel()
+        
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(NOTIFICATION_ID)
         
         screenStateReceiver?.let {
             unregisterReceiver(it)

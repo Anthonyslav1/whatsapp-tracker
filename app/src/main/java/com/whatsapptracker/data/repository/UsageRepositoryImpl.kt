@@ -18,21 +18,19 @@ class UsageRepositoryImpl @Inject constructor(
     private val dao: ChatSessionDao
 ) : UsageRepository {
 
-    override fun getTodayTotalDuration(): Flow<Long> {
-        val (start, end) = TimeUtils.getDayRangeMilli(LocalDate.now())
+    override fun getTodayTotalDuration(date: LocalDate): Flow<Long> {
+        val (start, end) = TimeUtils.getDayRangeMilli(date)
         return dao.getTotalDurationInRange(start, end)
     }
 
-    override fun getTodayTopContacts(limit: Int): Flow<List<ContactDuration>> {
-        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endOfDay = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        return dao.getTopContacts(startOfDay, endOfDay, limit)
+    override fun getTodayTopContacts(limit: Int, date: LocalDate): Flow<List<ContactDuration>> {
+        val (start, end) = TimeUtils.getDayRangeMilli(date)
+        return dao.getTopContacts(start, end, limit)
     }
 
-    override fun getTopContactsByRelationshipScore(limit: Int): Flow<List<ContactDuration>> {
-        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endOfDay = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        return dao.getTopContactsByRelationshipScore(startOfDay, endOfDay, limit)
+    override fun getTopContactsByRelationshipScore(limit: Int, date: LocalDate): Flow<List<ContactDuration>> {
+        val (start, end) = TimeUtils.getDayRangeMilli(date)
+        return dao.getTopContactsByRelationshipScore(start, end, limit)
     }
 
     override fun getSmartInsights(startTime: Long, endTime: Long): Flow<String> {
@@ -47,10 +45,9 @@ class UsageRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTopEntertainers(limit: Int): Flow<List<ContactDuration>> {
-        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endOfDay = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        return dao.getTopEntertainers(startOfDay, endOfDay, limit)
+    override fun getTopEntertainers(limit: Int, date: LocalDate): Flow<List<ContactDuration>> {
+        val (start, end) = TimeUtils.getDayRangeMilli(date)
+        return dao.getTopEntertainers(start, end, limit)
     }
 
     override fun getWeeklyTotals(): Flow<Map<LocalDate, Long>> {
