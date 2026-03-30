@@ -7,6 +7,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,27 +19,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.ui.screens.formatDuration
+import com.whatsapptracker.ui.theme.CyanAccent
 import com.whatsapptracker.ui.theme.DarkSurfaceVariant
 import com.whatsapptracker.ui.theme.TextPrimary
 import com.whatsapptracker.ui.theme.TextSecondary
-import com.whatsapptracker.ui.theme.WhatsAppDarkGreen
-import com.whatsapptracker.ui.theme.WhatsAppGreen
 
 @Composable
 fun TopContactsList(contacts: List<ContactDuration>) {
     val maxDuration = contacts.maxOfOrNull { it.totalDuration }?.toFloat() ?: 1f
 
-    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-        contacts.forEachIndexed { index, contact ->
-            ContactRow(index + 1, contact, maxDuration)
-            if (index < contacts.lastIndex) {
-                Spacer(modifier = Modifier.height(12.dp))
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+    ) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            contacts.take(5).forEachIndexed { index, contact ->
+                ContactRow(index + 1, contact, maxDuration)
             }
         }
     }
@@ -51,58 +59,67 @@ private fun ContactRow(rank: Int, contact: ContactDuration, maxDuration: Float) 
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Rank badge
+        // Subtle Avatar Placeholder
         Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(40.dp)
                 .clip(CircleShape)
-                .background(
-                    if (rank == 1) WhatsAppGreen else DarkSurfaceVariant
-                ),
+                .background(Color(0xFF2A2D35)),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "$rank",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (rank == 1) Color.White else TextSecondary,
+                text = contact.contactName.take(1).uppercase(),
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
                 fontWeight = FontWeight.Bold,
             )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = contact.contactName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = formatDuration(contact.totalDuration),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WhatsAppGreen,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
+            // Tiny rank badge overlaid on bottom right
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(animatedFraction)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(WhatsAppGreen, WhatsAppDarkGreen)
-                        )
-                    )
+                    .align(Alignment.BottomEnd)
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(if (rank == 1) CyanAccent else Color(0xFF6E6E80)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "$rank",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 9.sp,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = contact.contactName,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            // Fake role or duration
+            Text(
+                text = formatDuration(contact.totalDuration),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
             )
         }
+
+        // Lightning bolt icon indicating activity
+        Icon(
+            imageVector = Icons.Default.ElectricBolt,
+            contentDescription = null,
+            tint = CyanAccent.copy(alpha = 0.6f + (0.4f * animatedFraction)),
+            modifier = Modifier.size(20.dp)
+        )
     }
 }

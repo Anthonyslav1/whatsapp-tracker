@@ -1,85 +1,122 @@
 package com.whatsapptracker.ui.components.cards
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.whatsapptracker.R
 import com.whatsapptracker.data.model.YearlyReportData
+import com.whatsapptracker.ui.theme.AppTypography
+import com.whatsapptracker.ui.theme.CyanAccent
+import com.whatsapptracker.ui.theme.CyanAccentMuted
+import com.whatsapptracker.ui.theme.TextPrimary
+import com.whatsapptracker.ui.theme.TextSecondary
 
 @Composable
 fun BestFriendCard(data: YearlyReportData, isVisible: Boolean) {
-    val bestFriend = data.topContacts.firstOrNull()
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(800), label = "alpha"
-    )
+    if (!isVisible) return
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+    val bestFriend = data.topRelationshipContacts.firstOrNull()
+    val name = bestFriend?.contactName ?: "The Void"
+    val hours = formatDurationHours(bestFriend?.totalDuration ?: 0L)
+
+    Card(
+        modifier = Modifier.fillMaxSize(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF16181D))
     ) {
-        if (bestFriend != null) {
-            Text(
-                text = "MOST TIME SPENT WITH",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White.copy(alpha = alpha * 0.8f),
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Fake Background Image Gradient (grayscale)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFF2E323A), Color(0xFF16181D))
+                        )
+                    )
             )
-            Text(
-                text = "LONGEST CHATTER",
-                style = MaterialTheme.typography.displaySmall,
-                color = Color.White.copy(alpha = alpha * 0.8f),
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.best_friend_emoji),
-                fontSize = 56.sp,
-                modifier = Modifier.graphicsLayer { this.alpha = alpha }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = bestFriend.contactName,
-                style = MaterialTheme.typography.displayMedium,
-                color = Color.White.copy(alpha = alpha),
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            val hours = bestFriend.totalDuration / 3600000
-            val minutes = (bestFriend.totalDuration % 3600000) / 60000
-            Text(
-                text = stringResource(R.string.best_friend_time, hours, minutes),
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White.copy(alpha = alpha * 0.7f),
-            )
-            if (data.totalDurationMs > 0) {
-                val pct = (bestFriend.totalDuration * 100 / data.totalDurationMs).toInt()
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.best_friend_pct, pct.toString()),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = alpha * 0.5f),
-                )
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Header
+                Column {
+                    Text(
+                        text = "YOUR #1 BEST FRIEND",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CyanAccentMuted,
+                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = name.replace(" ", "\n"),
+                        style = AppTypography.displayMedium,
+                        color = TextPrimary,
+                        lineHeight = 44.sp,
+                    )
+                }
+
+                // Data Box & Heart
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFF22252D))
+                            .padding(horizontal = 20.dp, vertical = 16.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = hours,
+                                style = AppTypography.displaySmall,
+                                color = CyanAccent,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "HOURS TOGETHER",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextSecondary,
+                                letterSpacing = 0.5.sp,
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Heart",
+                        tint = CyanAccent,
+                        modifier = Modifier.size(36.dp).padding(bottom = 8.dp)
+                    )
+                }
             }
-        } else {
-            Text(
-                text = stringResource(R.string.no_chats),
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White.copy(alpha = 0.7f),
-            )
         }
     }
+}
+
+private fun formatDurationHours(durationMs: Long): String {
+    val hours = durationMs / 3600000
+    return if (hours > 0) "$hours" else "<1"
 }

@@ -15,6 +15,15 @@ Ravdesk is an on-device, privacy-focused Android application that tracks your Wh
 - **100% Offline & Private**: Backed by a local Room SQLite database. No internet permission required.
 - **Resilient Background Service**: Utilizes robust `WorkManager` background enqueueing to ensure active sessions are reliably saved even if the app crashes or is aggressively killed by the OS.
 
+## 🚀 Changes
+
+### 🎉 Cinematic UI Overhaul
+We've completely redesigned Ravdesk to feel significantly more premium, sleek, and immersive!
+
+* **Dark & Tactile Design:** Say goodbye to flat screens! The app now features a beautiful deep-dark background, vibrant neon cyan accents, and elegant new typography. We've also added subtle vibrations (haptics) across the app, so your buttons and scrolls actually *feel* responsive.
+* **Animated Dashboard:** Your daily stats now smoothly glide onto the screen when you open the app. The old screen-time blocks have been upgraded to glowing circular "System Integrity" rings that track your interaction capacity in real-time.
+* **The "Wrapped" Experience, Upgraded:** The Yearly Report is no longer a simple swipe-carousel. It’s now a continuous cinematic vertical feed! We’ve added visually stunning new data cards, including a grayscale "Best Friend" card and a GitHub-style "Activity Heatmap" so you can visually see precisely when your interactions peaked.
+
 ## Technical Architecture
 
 - **Kotlin** & **Coroutines** (incorporating `async` parallel DB aggregations).

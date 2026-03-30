@@ -1,41 +1,32 @@
 package com.whatsapptracker.ui.screens
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whatsapptracker.R
 import com.whatsapptracker.data.model.YearlyReportData
 import com.whatsapptracker.ui.components.cards.*
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.YearlyReportViewModel
-import kotlin.math.absoluteValue
+import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun YearlyReportScreen(
     onBack: () -> Unit,
@@ -53,26 +44,39 @@ fun YearlyReportScreen(
             isLoading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = WhatsAppGreen
+                    color = CyanAccent
                 )
             }
             reportData != null -> {
                 val data = reportData!!
-                val totalCards = 8
-                val pagerState = rememberPagerState(pageCount = { totalCards })
+                val scrollState = rememberScrollState()
                 val haptic = LocalHapticFeedback.current
 
-                // Haptic feedback on page change
-                LaunchedEffect(pagerState.currentPage) {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                // Staggered reveals for the cards
+                var revealIntro by remember { mutableStateOf(false) }
+                var revealBFF by remember { mutableStateOf(false) }
+                var revealPeak by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    revealIntro = true
+                    delay(300)
+                    revealBFF = true
+                    delay(300)
+                    revealPeak = true
                 }
 
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Top bar with page indicators
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding()
+                        .verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Top sticky bar
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                            .padding(top = 16.dp, start = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = onBack) {
@@ -82,55 +86,77 @@ fun YearlyReportScreen(
                                 tint = TextPrimary
                             )
                         }
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(totalCards) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 3.dp)
-                                        .size(
-                                            width = if (index == pagerState.currentPage) 20.dp else 8.dp,
-                                            height = 4.dp
-                                        )
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (index == pagerState.currentPage) WhatsAppGreen
-                                            else TextMuted.copy(alpha = 0.3f)
-                                        )
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(48.dp))
                     }
 
-                    // Pager with parallax effect
-                    HorizontalPager(
-                        state = pagerState,
+                    // Feed Elements
+                    AnimatedVisibility(visible = revealIntro, enter = fadeIn() + slideInVertically(initialOffsetY = { 100 })) {
+                        Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+                            IntroCard(data, isVisible = true)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    AnimatedVisibility(visible = revealBFF, enter = fadeIn() + slideInVertically(initialOffsetY = { 100 })) {
+                        Box(modifier = Modifier.fillMaxWidth().height(420.dp).padding(horizontal = 24.dp)) {
+                            BestFriendCard(data, isVisible = true)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    AnimatedVisibility(visible = revealPeak, enter = fadeIn() + slideInVertically(initialOffsetY = { 100 })) {
+                        Box(modifier = Modifier.fillMaxWidth().height(360.dp).padding(horizontal = 24.dp)) {
+                            MostActiveMonthCard(data, isVisible = true)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // "Your data is yours"
+                    Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        pageSpacing = 16.dp,
-                    ) { page ->
-                        val pageOffset = (
-                            (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                        ).absoluteValue
-                        val scale = lerp(1f, 0.88f, pageOffset.coerceIn(0f, 1f))
-                        val alpha = lerp(1f, 0.5f, pageOffset.coerceIn(0f, 1f))
-                        val isVisible = pagerState.currentPage == page
-
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                    this.alpha = alpha
+                            .fillMaxWidth()
+                            .padding(40.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "Your data is yours.",
+                            style = AppTypography.headlineMedium,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "This report is generated locally and never leaves your secure enclave. Ravdesk remains the silent guardian of your narrative.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary,
+                            lineHeight = 22.sp,
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val hours = data.totalDurationMs / 3600000
+                                val bff = data.topRelationshipContacts.firstOrNull()?.contactName ?: "nobody"
+                                val shareText = "I spent $hours hours on WhatsApp this year.\nMy true Best Friend by Engagement Score is $bff.\n\nCheck your own communication metadata!"
+                                val intent = android.content.Intent().apply {
+                                    action = android.content.Intent.ACTION_SEND
+                                    putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                    type = "text/plain"
                                 }
+                                context.startActivity(android.content.Intent.createChooser(intent, "Share your Meta"))
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CyanAccent, contentColor = Color.Black),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
                         ) {
-                            WrappedCard(page, data, isVisible)
+                            Text(text = "DOWNLOAD SECURE PDF", style = MaterialTheme.typography.labelLarge, fontFamily = InterFontFamily, letterSpacing = 1.sp)
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
             else -> {
@@ -163,74 +189,4 @@ fun YearlyReportScreen(
             }
         }
     }
-}
-
-@Composable
-private fun WrappedCard(page: Int, data: YearlyReportData, isVisible: Boolean) {
-    val gradients = listOf(
-        listOf(WrappedPurple1, WrappedPurple2, PrimaryPurple),
-        listOf(WrappedGreen1, WrappedGreen2, WhatsAppGreen),
-        listOf(WrappedPink1, WrappedPink2, PrimaryPink),
-        listOf(WrappedIndigo1, WrappedIndigo2, PrimaryPurple),
-        listOf(WrappedOrange1, WrappedOrange2, Color(0xFFFF9800)),
-        listOf(WrappedCyan1, WrappedCyan2, Color(0xFF00BCD4)),
-        listOf(WrappedPurple1, WrappedPink1, Color(0xFFFF4081)),
-        listOf(WrappedIndigo1, WrappedGreen1, PrimaryPurple),
-    )
-
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(colors = gradients[page])
-                )
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            when (page) {
-                0 -> IntroCard(data, isVisible)
-                1 -> TotalTimeCard(data, isVisible)
-                2 -> BestFriendCard(data, isVisible)
-                3 -> RelationshipScoreCard(data, isVisible)
-                4 -> TopFiveCard(data, isVisible)
-                5 -> MostActiveMonthCard(data, isVisible)
-                6 -> FunFactsCard(data, isVisible)
-                7 -> EntertainerCard(data, isVisible)
-            }
-
-            // Share hint at bottom
-            val context = androidx.compose.ui.platform.LocalContext.current
-            TextButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp),
-                onClick = {
-                    val hours = data.totalDurationMs / 3600000
-                    val bff = data.topRelationshipContacts.firstOrNull()?.contactName ?: "nobody"
-                    val shareText = "I spent $hours hours on WhatsApp this year.\nMy true Best Friend by Engagement Score is $bff.\n\nCheck your own communication metadata!"
-                    val intent = android.content.Intent().apply {
-                        action = android.content.Intent.ACTION_SEND
-                        putExtra(android.content.Intent.EXTRA_TEXT, shareText)
-                        type = "text/plain"
-                    }
-                    context.startActivity(android.content.Intent.createChooser(intent, "Share your Meta"))
-                }
-            ) {
-                Text(
-                    text = "Share Your Meta \uD83D\uDE80",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White.copy(alpha = 0.8f),
-                )
-            }
-        }
-    }
-}
-
-private fun lerp(start: Float, stop: Float, fraction: Float): Float {
-    return start + fraction * (stop - start)
 }

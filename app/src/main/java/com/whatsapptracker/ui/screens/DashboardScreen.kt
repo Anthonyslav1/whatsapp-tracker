@@ -1,5 +1,7 @@
 package com.whatsapptracker.ui.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,20 +14,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleEventEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.Lifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.whatsapptracker.R
 import com.whatsapptracker.ui.components.*
 import com.whatsapptracker.ui.components.cards.SmartInsightsCard
 import com.whatsapptracker.ui.theme.*
 import com.whatsapptracker.ui.viewmodel.DashboardViewModel
 import com.whatsapptracker.utils.isAccessibilityServiceEnabled
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +52,11 @@ fun DashboardScreen(
     val smartInsights by viewModel.smartInsights.collectAsStateWithLifecycle()
     val weeklyTotals by viewModel.weeklyTotals.collectAsStateWithLifecycle()
 
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +64,7 @@ fun DashboardScreen(
             .systemBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header — rebranded to Ravdesk
+        // Main Cinematic Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,19 +74,21 @@ fun DashboardScreen(
         ) {
             Column {
                 Text(
-                    text = stringResource(R.string.dashboard_title),
-                    style = MaterialTheme.typography.headlineLarge,
+                    text = "System\nIntegrity",
+                    style = AppTypography.displayMedium,
                     color = TextPrimary,
                     fontWeight = FontWeight.Black,
+                    lineHeight = 40.sp,
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.dashboard_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Deep monitoring of encrypted\ncommunication streams and vault\ninteraction peaks.",
+                    style = MaterialTheme.typography.bodyLarge,
                     color = TextSecondary,
+                    lineHeight = 22.sp,
                 )
             }
-            IconButton(onClick = onNavigateToSettings) {
+            IconButton(onClick = onNavigateToSettings, modifier = Modifier.align(Alignment.Top)) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = stringResource(R.string.settings),
@@ -111,65 +122,107 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Today's total time card — more padding for breathing room
-        TodayTimeCard(todayDuration)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // System Integrity Card (Replaces TodayTimeCard)
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(500)) + fadeIn(animationSpec = tween(500))
+        ) {
+            TodayTimeCard(todayDuration)
+        }
 
         Spacer(modifier = Modifier.height(28.dp))
 
         // Wrapped CTA
-        WrappedBanner(onClick = onNavigateToWrapped)
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // Top contacts
-        SectionHeader(stringResource(R.string.top_contacts_today))
-        Spacer(modifier = Modifier.height(4.dp))
-        if (topContacts.isEmpty()) {
-            EmptyState(stringResource(R.string.top_contacts_empty))
-        } else {
-            TopContactsList(topContacts)
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(500, delayMillis = 100)) + fadeIn(animationSpec = tween(500, delayMillis = 100))
+        ) {
+            WrappedBanner(onClick = onNavigateToWrapped)
         }
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Top Entertainers — visually differentiated with purple accent + horizontal pills
-        SectionHeader(stringResource(R.string.top_entertainers_today), emoji = "🍿")
-        Spacer(modifier = Modifier.height(4.dp))
-        if (topEntertainers.isEmpty()) {
-            EmptyState(stringResource(R.string.top_entertainers_empty))
-        } else {
-            EntertainersPillRow(topEntertainers)
+        // Top contacts component
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(500, delayMillis = 200)) + fadeIn(animationSpec = tween(500, delayMillis = 200))
+        ) {
+            Column {
+                SectionHeader("Top Contacts")
+                Spacer(modifier = Modifier.height(4.dp))
+                if (topContacts.isEmpty()) {
+                    EmptyState(stringResource(R.string.top_contacts_empty))
+                } else {
+                    TopContactsList(topContacts)
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Weekly chart
-        SectionHeader(stringResource(R.string.last_7_days))
-        Spacer(modifier = Modifier.height(4.dp))
-        WeeklyChart(weeklyTotals)
+        // Weekly chart component
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(500, delayMillis = 300)) + fadeIn(animationSpec = tween(500, delayMillis = 300))
+        ) {
+            Column {
+                SectionHeader("Weekly Trend", subtitle = "Usage peaks across all encrypted endpoints")
+                Spacer(modifier = Modifier.height(12.dp))
+                WeeklyChart(weeklyTotals)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Top Entertainers
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(500, delayMillis = 400)) + fadeIn(animationSpec = tween(500, delayMillis = 400))
+        ) {
+            Column {
+                SectionHeader(stringResource(R.string.top_entertainers_today), emoji = "🍿")
+                Spacer(modifier = Modifier.height(4.dp))
+                if (topEntertainers.isEmpty()) {
+                    EmptyState(stringResource(R.string.top_entertainers_empty))
+                } else {
+                    EntertainersPillRow(topEntertainers)
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
         SmartInsightsCard(insightText = smartInsights)
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(60.dp))
     }
 }
 
 @Composable
-private fun SectionHeader(title: String, emoji: String? = null) {
-    Row(
+private fun SectionHeader(title: String, subtitle: String? = null, emoji: String? = null) {
+    Column(
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold,
-        )
-        if (emoji != null) {
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = emoji, fontSize = 18.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = title,
+                style = AppTypography.headlineLarge,
+                color = TextPrimary,
+                fontWeight = FontWeight.Normal,
+            )
+            if (emoji != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = emoji, fontSize = 20.sp)
+            }
+        }
+        if (subtitle != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+            )
         }
     }
 }

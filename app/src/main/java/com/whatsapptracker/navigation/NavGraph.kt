@@ -42,6 +42,9 @@ fun AppNavGraph(
                 },
                 onNavigateToSetup = {
                     navController.navigate(Routes.Setup)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Routes.Settings)
                 }
             )
         }

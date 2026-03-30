@@ -5,11 +5,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = WhatsAppGreen,
+    primary = CyanAccent,
     onPrimary = DarkBackground,
-    secondary = PrimaryPurple,
+    secondary = CyanAccentMuted,
     onSecondary = TextPrimary,
-    tertiary = PrimaryPink,
+    tertiary = WhatsAppGreen,
     background = DarkBackground,
     onBackground = TextPrimary,
     surface = DarkSurface,

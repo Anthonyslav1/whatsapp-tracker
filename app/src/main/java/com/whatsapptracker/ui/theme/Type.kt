@@ -16,6 +16,7 @@ val provider = GoogleFont.Provider(
 )
 
 val InterFont = GoogleFont("Inter")
+val PlayfairDisplayFont = GoogleFont("Playfair Display")
 
 val InterFontFamily = FontFamily(
     Font(googleFont = InterFont, fontProvider = provider, weight = FontWeight.Normal),
@@ -25,37 +26,45 @@ val InterFontFamily = FontFamily(
     Font(googleFont = InterFont, fontProvider = provider, weight = FontWeight.Black),
 )
 
+val PlayfairFontFamily = FontFamily(
+    Font(googleFont = PlayfairDisplayFont, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = PlayfairDisplayFont, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = PlayfairDisplayFont, fontProvider = provider, weight = FontWeight.SemiBold),
+    Font(googleFont = PlayfairDisplayFont, fontProvider = provider, weight = FontWeight.Bold),
+    Font(googleFont = PlayfairDisplayFont, fontProvider = provider, weight = FontWeight.Black),
+)
+
 val AppTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairFontFamily,
         fontWeight = FontWeight.Black,
         fontSize = 48.sp,
         lineHeight = 56.sp,
         letterSpacing = (-1.5).sp,
     ),
     displayMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
         lineHeight = 44.sp,
         letterSpacing = (-0.5).sp,
     ),
     displaySmall = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = (-0.25).sp,
     ),
     headlineLarge = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         lineHeight = 32.sp,
         letterSpacing = (-0.25).sp,
     ),
     headlineMedium = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlayfairFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 28.sp,
