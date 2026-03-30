@@ -29,6 +29,10 @@ We've completely redesigned Ravdesk to feel significantly more premium, sleek, a
 * **Build Optimization:** We aggressively streamlined the git tracking mechanism, actively ignoring and wiping unnecessary compiled output artifacts (`app/build/`) from our history to cleanly modularize the environment.
 * **Compilation Stability:** We finalized the cinematic UI overhaul by rigorously resolving residual missing references and legacy Material color clashes (`WrappedPurple`/`WrappedPink`) across your feed and components.
 
+### 🕰️ Time Machine & Tracking Visibility
+* **Foreground System Notifications:** We completely eliminated the "silent tracking" anxiety. Ravdesk now intelligently asks for the `POST_NOTIFICATIONS` permission natively during the Setup flow and utilizes a silent, ongoing system notification to broadcast its current `TrackingState` in real-time. It elegantly tells you "Waiting for WhatsApp..." or exactly who it is actively tracking.
+* **Interactive Historical Dashboard:** We abstracted the SQLite Analytics engine (`UsageRepositoryImpl`) to allow arbitrary date queries. We entirely transformed the Dashboard by building a `.flatMapLatest` reactive `DateSelectorStrip`! You can now effortlessly swipe back up to 30 days into the past and watch your "System Integrity" and "Top Contacts" metrics instantly reconstruct themselves.
+
 ## Technical Architecture
 
 - **Kotlin** & **Coroutines** (incorporating `async` parallel DB aggregations).
