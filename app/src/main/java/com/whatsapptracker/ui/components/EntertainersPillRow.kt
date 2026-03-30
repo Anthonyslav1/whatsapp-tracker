@@ -18,10 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.ui.screens.formatDuration
+import com.whatsapptracker.ui.theme.CyanAccent
+import com.whatsapptracker.ui.theme.CyanAccentMuted
 import com.whatsapptracker.ui.theme.DarkSurfaceVariant
-import com.whatsapptracker.ui.theme.PrimaryPurple
 import com.whatsapptracker.ui.theme.TextSecondary
-import com.whatsapptracker.ui.theme.WrappedPurple2
 
 @Composable
 fun EntertainersPillRow(entertainers: List<ContactDuration>) {
@@ -43,7 +43,7 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
                         .background(
                             Brush.verticalGradient(
                                 colors = if (index == 0)
-                                    listOf(WrappedPurple2, PrimaryPurple)
+                                    listOf(CyanAccent, CyanAccentMuted)
                                 else
                                     listOf(DarkSurfaceVariant, DarkSurfaceVariant)
                             )

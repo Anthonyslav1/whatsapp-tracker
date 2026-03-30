@@ -56,7 +56,7 @@ fun MostActiveMonthCard(data: YearlyReportData, isVisible: Boolean) {
 
             // Heatmap grid (Visual approximation of interaction density)
             Column(modifier = Modifier.fillMaxWidth()) {
-                val seed = data.totalSessionsRecorded.hashCode().let { if (it == 0) 42 else it }
+                val seed = data.totalSessionCount.hashCode().let { if (it == 0) 42 else it }
                 val random = Random(seed)
                 
                 repeat(4) {

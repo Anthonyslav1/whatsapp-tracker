@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.ui.screens.formatDuration
 import com.whatsapptracker.ui.theme.CyanAccent

@@ -20,8 +20,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.R
-import com.whatsapptracker.ui.theme.WrappedPink2
-import com.whatsapptracker.ui.theme.WrappedPurple2
+import com.whatsapptracker.ui.theme.CyanAccent
+import com.whatsapptracker.ui.theme.CyanAccentMuted
 
 @Composable
 fun WrappedBanner(onClick: () -> Unit) {
@@ -38,7 +38,7 @@ fun WrappedBanner(onClick: () -> Unit) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(WrappedPurple2, WrappedPink2)
+                        colors = listOf(CyanAccentMuted, CyanAccent)
                     )
                 )
                 .padding(20.dp),
