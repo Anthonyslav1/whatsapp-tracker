@@ -9,3 +9,6 @@ build/
 local.properties
 *.iml
 *.hprof
+
+# Module build directories
+app/build/
