@@ -16,7 +16,7 @@ import java.time.DayOfWeek
 class UsageRepositoryTest {
 
     private val dao: ChatSessionDao = mockk()
-    private val repository = UsageRepository(dao)
+    private val repository = UsageRepositoryImpl(dao)
 
     @Test
     fun testGetYearlyReport() = runBlocking {
@@ -26,6 +26,9 @@ class UsageRepositoryTest {
             MonthlyDuration(month = 2, totalDuration = 2000L)
         )
         coEvery { dao.getTopContactsYearly(any(), any(), any()) } returns listOf(
+            ContactDuration("Alice", 3000L)
+        )
+        coEvery { dao.getTopContactsByRelationshipScoreYearly(any(), any(), any()) } returns listOf(
             ContactDuration("Alice", 3000L)
         )
         coEvery { dao.getUniqueContactCount(any(), any()) } returns 1

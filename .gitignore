@@ -12,3 +12,5 @@ local.properties
 
 # Module build directories
 app/build/
+gradle-8.13/
+gradle-8.13-bin.zip
