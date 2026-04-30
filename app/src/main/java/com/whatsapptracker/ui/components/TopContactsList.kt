@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import com.whatsapptracker.data.db.ContactDuration
 import com.whatsapptracker.ui.screens.formatDuration
 import com.whatsapptracker.ui.theme.CyanAccent
@@ -63,6 +65,9 @@ private fun ContactRow(rank: Int, contact: ContactDuration, maxDuration: Float) 
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clearAndSetSemantics {
+                contentDescription = "Rank $rank: ${contact.contactName}, time spent: ${formatDuration(contact.totalDuration)}"
+            }
     ) {
         // Subtle Avatar Placeholder
         Box(
