@@ -23,9 +23,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.whatsapptracker.ui.screens.formatDurationShort
 import com.whatsapptracker.ui.theme.CyanAccent
 import com.whatsapptracker.ui.theme.DarkSurfaceVariant
 import com.whatsapptracker.ui.theme.TextMuted
@@ -53,7 +56,15 @@ fun WeeklyChart(dailyTotals: Map<LocalDate, Long>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .clearAndSetSemantics {
+                val chartDescription = days.joinToString(separator = ", ") { date ->
+                    val duration = dailyTotals[date] ?: 0L
+                    val dayName = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    "$dayName: ${if (duration > 0) formatDurationShort(duration) else "0 minutes"}"
+                }
+                contentDescription = "Weekly trend chart. $chartDescription"
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
     ) {
