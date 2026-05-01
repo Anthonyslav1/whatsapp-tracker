@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +36,9 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
     ) {
         entertainers.forEachIndexed { index, entertainer ->
             Card(
+                modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = "Rank ${index + 1}: ${entertainer.contactName}, watched statuses for ${formatDuration(entertainer.totalDuration)}"
+                },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             ) {
