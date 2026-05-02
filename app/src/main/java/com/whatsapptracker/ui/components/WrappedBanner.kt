@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.R
@@ -25,11 +27,17 @@ import com.whatsapptracker.ui.theme.CyanAccentMuted
 
 @Composable
 fun WrappedBanner(onClick: () -> Unit) {
+    val title = stringResource(R.string.your_year_wrapped)
+    val subtitle = stringResource(R.string.wrapped_subtitle)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = "$title. $subtitle"
+            },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
     ) {
@@ -56,13 +64,13 @@ fun WrappedBanner(onClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.your_year_wrapped),
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = stringResource(R.string.wrapped_subtitle),
+                        text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.8f),
                     )

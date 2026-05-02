@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whatsapptracker.data.db.ContactDuration
@@ -36,6 +38,9 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = "${entertainer.contactName}, ${formatDuration(entertainer.totalDuration)}"
+                }
             ) {
                 Box(
                     modifier = Modifier
