@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.R
@@ -47,10 +49,15 @@ fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {
             )
             val hours = contact.totalDuration / 3600000
             val minutes = (contact.totalDuration % 3600000) / 60000
+            val timeString = stringResource(R.string.top_five_time, hours, minutes)
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clearAndSetSemantics {
+                            contentDescription = "${index + 1}. ${contact.contactName}, $timeString"
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
@@ -60,7 +67,7 @@ fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = stringResource(R.string.top_five_time, hours, minutes),
+                        text = timeString,
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White.copy(alpha = 0.7f),
                     )
