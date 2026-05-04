@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,7 +52,11 @@ fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clearAndSetSemantics {
+                            contentDescription = "Rank ${index + 1}: ${contact.contactName}, time spent: $hours hours and $minutes minutes"
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
