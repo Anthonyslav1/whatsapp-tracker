@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,8 +49,15 @@ fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {
             )
             val hours = contact.totalDuration / 3600000
             val minutes = (contact.totalDuration % 3600000) / 60000
+            val timeString = stringResource(R.string.top_five_time, hours, minutes)
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clearAndSetSemantics {
+                        contentDescription = "Rank ${index + 1}: ${contact.contactName}, $timeString"
+                    }
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -60,7 +69,7 @@ fun TopFiveCard(data: YearlyReportData, isVisible: Boolean) {
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = stringResource(R.string.top_five_time, hours, minutes),
+                        text = timeString,
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White.copy(alpha = 0.7f),
                     )
