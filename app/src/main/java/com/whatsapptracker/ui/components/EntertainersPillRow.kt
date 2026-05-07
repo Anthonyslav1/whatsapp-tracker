@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,9 +35,13 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         entertainers.forEachIndexed { index, entertainer ->
+            val durationText = formatDuration(entertainer.totalDuration)
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = "Entertainer: ${entertainer.contactName}, time spent: $durationText"
+                }
             ) {
                 Box(
                     modifier = Modifier
@@ -65,7 +71,7 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = formatDuration(entertainer.totalDuration),
+                            text = durationText,
                             style = MaterialTheme.typography.bodySmall,
                             color = if (index == 0) Color.White.copy(alpha = 0.8f) else TextSecondary,
                         )
