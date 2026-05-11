@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.ui.theme.CyanAccent
@@ -62,6 +65,12 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                        val month = date.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                        contentDescription = "$dayOfWeek, $month ${date.dayOfMonth}"
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
