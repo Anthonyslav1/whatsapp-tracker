@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,7 +90,8 @@ private fun FunFactItem(emoji: String, text: String, alpha: Float) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White.copy(alpha = alpha * 0.1f))
-            .padding(16.dp),
+            .padding(16.dp)
+            .clearAndSetSemantics { contentDescription = text },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = emoji, fontSize = 28.sp)
