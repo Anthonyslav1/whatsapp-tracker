@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whatsapptracker.ui.theme.CyanAccent
@@ -52,6 +55,12 @@ fun DateSelectorStrip(
             val backgroundColor = if (isSelected) CyanAccent.copy(alpha = 0.15f) else DarkSurfaceVariant
             val textColor = if (isSelected) CyanAccent else if (isToday) TextPrimary else TextSecondary
 
+            val dayNameFull = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            val monthNameFull = date.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            val dayOfMonth = date.dayOfMonth
+            val todayString = if (isToday) ", Today" else ""
+            val accessibilityText = "$dayNameFull, $monthNameFull $dayOfMonth$todayString"
+
             Box(
                 modifier = Modifier
                     .width(64.dp)
@@ -62,6 +71,10 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        contentDescription = accessibilityText
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
