@@ -24,6 +24,9 @@ import com.whatsapptracker.ui.theme.TextSecondary
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 
 @Composable
 fun DateSelectorStrip(
@@ -49,6 +52,10 @@ fun DateSelectorStrip(
             val isSelected = date == selectedDate
             val isToday = date == LocalDate.now()
 
+            val dayNameFull = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            val monthNameFull = date.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            val semanticDesc = "$dayNameFull, $monthNameFull ${date.dayOfMonth}" + if (isToday) ", Today" else ""
+
             val backgroundColor = if (isSelected) CyanAccent.copy(alpha = 0.15f) else DarkSurfaceVariant
             val textColor = if (isSelected) CyanAccent else if (isToday) TextPrimary else TextSecondary
 
@@ -62,6 +69,10 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        contentDescription = semanticDesc
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
