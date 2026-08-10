@@ -21,6 +21,9 @@ import com.whatsapptracker.ui.theme.CyanAccent
 import com.whatsapptracker.ui.theme.DarkSurfaceVariant
 import com.whatsapptracker.ui.theme.TextPrimary
 import com.whatsapptracker.ui.theme.TextSecondary
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -52,6 +55,11 @@ fun DateSelectorStrip(
             val backgroundColor = if (isSelected) CyanAccent.copy(alpha = 0.15f) else DarkSurfaceVariant
             val textColor = if (isSelected) CyanAccent else if (isToday) TextPrimary else TextSecondary
 
+            val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            val dayOfMonth = date.dayOfMonth.toString()
+            val month = date.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            val fullDateText = "$dayOfWeek, $month $dayOfMonth"
+
             Box(
                 modifier = Modifier
                     .width(64.dp)
@@ -62,6 +70,10 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        contentDescription = fullDateText
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
