@@ -24,6 +24,9 @@ import com.whatsapptracker.ui.theme.TextSecondary
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 
 @Composable
 fun DateSelectorStrip(
@@ -62,6 +65,10 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        contentDescription = "${date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())} ${date.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())} ${date.dayOfMonth}"
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
