@@ -48,6 +48,7 @@
     <string name="entertainer_empty">No statuses watched</string>
 
     <!-- Dashboard Strings -->
+    <string name="today">Today</string>
     <string name="dashboard_title">Ravdesk</string>
     <string name="dashboard_subtitle">Today\'s activity</string>
     <string name="screen_time">Screen Time</string>
