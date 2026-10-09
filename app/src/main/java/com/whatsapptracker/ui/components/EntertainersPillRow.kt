@@ -2,6 +2,8 @@ package com.whatsapptracker.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +39,7 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             ) {
+                val formattedDuration = formatDuration(entertainer.totalDuration)
                 Box(
                     modifier = Modifier
                         .width(150.dp)
@@ -48,6 +51,9 @@ fun EntertainersPillRow(entertainers: List<ContactDuration>) {
                                     listOf(DarkSurfaceVariant, DarkSurfaceVariant)
                             )
                         )
+                        .clearAndSetSemantics {
+                            contentDescription = "🍿 ${entertainer.contactName}, ${formattedDuration}"
+                        }
                         .padding(16.dp),
                 ) {
                     Column {
