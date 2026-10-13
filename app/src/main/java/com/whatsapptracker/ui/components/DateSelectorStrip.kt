@@ -13,6 +13,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +55,9 @@ fun DateSelectorStrip(
             val backgroundColor = if (isSelected) CyanAccent.copy(alpha = 0.15f) else DarkSurfaceVariant
             val textColor = if (isSelected) CyanAccent else if (isToday) TextPrimary else TextSecondary
 
+            val fullDayName = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            val semanticDescription = "$fullDayName, ${date.dayOfMonth}"
+
             Box(
                 modifier = Modifier
                     .width(64.dp)
@@ -62,6 +68,10 @@ fun DateSelectorStrip(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDateSelected(date)
                         }
+                    }
+                    .clearAndSetSemantics {
+                        contentDescription = semanticDescription
+                        selected = isSelected
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
